@@ -5,15 +5,21 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import pytz
 from datetime import datetime
+import tensorflow as tf
 
-# 20220104 this is wrong!
-# It duplicates the definition in Find_Conspicuous_Disk.ipynb
-# But doing it temporarily to help test this file DiskFind.py
-#fcd_image_size = 1024
-#fcd_disk_size = 201
+# from DLAVA, includes unused symbols, maybe prune later
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten
+from tensorflow.keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.constraints import MaxNorm
+from tensorflow.keras.optimizers import Adam
 
-# This is only slightly better.
+# Relative disk size (diameter) and radius.
 fcd_relative_disk_size = 201.0 / 1024.0
+
+# Calculates RELATIVE disk radius on the fly -- rewrite later.
+def relative_disk_radius():
+    return fcd_relative_disk_size / 2
 
 ################################################################################
 # Draw utilities
@@ -62,13 +68,15 @@ def draw_line(p1, p2, color="white"):
 # (First version cribbed from DLAVA chapter B3, Listing B3-41)
 
 #def make_fcd_cnn_model():
-def make_disk_finder_model():
+#def make_disk_finder_model():
+def make_disk_finder_model(X_train):
     cnn_act = 'relu'
     dense_act = 'relu'
     output_act = 'linear'
     cnn_filters = 32
     cnn_dropout = 0.2
     dense_dropout = 0.5  # ala Hinton (2012)
+    input_shape=(X_train.shape[1], X_train.shape[2], X_train.shape[3], )
     #
     model = Sequential()
     # Two "units" of:
@@ -80,7 +88,7 @@ def make_disk_finder_model():
     #     Dropout: 0.2
     model.add(Conv2D(cnn_filters, (5, 5), activation=cnn_act, padding='same',
                      kernel_constraint=MaxNorm(3),
-                     input_shape=(fcd_image_size, fcd_image_size, 3)))
+                     input_shape=input_shape))
     model.add(Dropout(cnn_dropout))
     model.add(Conv2D(cnn_filters, (3, 3), activation=cnn_act, padding='same',
                      kernel_constraint=MaxNorm(3)))
@@ -115,30 +123,16 @@ def make_disk_finder_model():
     return model
 
 # Utility to fit and plot a run, again cribbed from DLAVA chapter B3.
-#def run_model(model_maker, plot_title):
-#    model = model_maker()
-def run_model(model, plot_title):
-
-    # print("In run_model():")
-    # debug_print('X_train.shape')
-    # debug_print("y_train.shape")
-    # 20211218
-    # history = model.fit(X_train, y_train, validation_split=0.2,
-    #                     epochs=fcd_epochs, batch_size=fcd_batch_size)
-    
+def run_model(model, X_train, y_train, X_test, y_test,
+              fcd_epochs, fcd_batch_size, plot_title):
     history = model.fit(X_train,
                         y_train,
-
-                        # validation_split=0.2,
                         validation_data = (X_test, y_test),
-                        
                         epochs=fcd_epochs,
                         batch_size=fcd_batch_size)
-
-
     print()
     plot_accuracy_and_loss(history, plot_title)
-    return model, history
+    return history
 
 # A little utility to draw plots of accuracy and loss.
 def plot_accuracy_and_loss(history, plot_title):
@@ -177,6 +171,51 @@ def plot_accuracy_and_loss(history, plot_title):
     plt.show()
 
 ################################################################################
+# in_disk metric
+################################################################################
+
+# Prototype metric to measure the fraction of predictions that are inside disks.
+# For each pair of 2d points of input, output tensor is 1 for IN and 0 for OUT.
+# def fcd_prediction_inside_disk(y_true, y_pred):
+
+# (make name shorter so it is easier to read fit() log.)
+def in_disk(y_true, y_pred):
+    distances = corresponding_distances(y_true, y_pred)
+    # relative_disk_radius = (float(fcd_disk_size) / float(fcd_image_size)) / 2
+
+    # From https://stackoverflow.com/a/42450565/1991373
+    # Boolean tensor marking where distances are less than relative_disk_radius.
+    # insides = tf.less(distances, relative_disk_radius)
+#    insides = tf.less(distances, fcd_disk_radius())
+    insides = tf.less(distances, relative_disk_radius())
+    map_to_zero_or_one = tf.cast(insides, tf.int32)
+    return map_to_zero_or_one
+
+
+#example_true_positions = tf.convert_to_tensor([[1.0, 2.0],
+#                                               [3.0, 4.0],
+#                                               [5.0, 6.0],
+#                                               [7.0, 8.0]])
+#example_pred_positions = tf.convert_to_tensor([[1.1, 2.0],
+#                                               [3.0, 4.2],
+#                                            #    [5.0, 6.1],
+#                                               [5.0, 6.0],
+#                                               [7.3, 8.0]])
+#
+# in_disk(example_true_positions, example_pred_positions)
+# fcd_disk_shaped_loss_helper(example_true_positions, example_pred_positions)
+
+# Given two tensors of 2d point coordinates, return a tensor of the Cartesian
+# distance between corresponding points in the input tensors.
+def corresponding_distances(y_true, y_pred):
+    true_pos_x, true_pos_y = tf.split(y_true, num_or_size_splits=2, axis=1)
+    pred_pos_x, pred_pos_y = tf.split(y_pred, num_or_size_splits=2, axis=1)
+    dx = true_pos_x - pred_pos_x
+    dy = true_pos_y - pred_pos_y
+    distances = tf.sqrt(tf.square(dx) + tf.square(dy))
+    return distances
+
+################################################################################
 # Miscellaneous utilities
 ################################################################################
 
@@ -188,3 +227,5 @@ def timestamp_string():
     # Just assert that we want to use Pacific time, for the benefit of cwr.
     # The Colab server seems to think local time is UTC.
     return datetime.now(pytz.timezone('US/Pacific')).strftime('%Y%m%d_%H%M')
+
+################################################################################
