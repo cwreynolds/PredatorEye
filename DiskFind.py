@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import math
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import pytz
 from datetime import datetime
-import tensorflow as tf
 
-# from DLAVA, includes unused symbols, maybe prune later
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten
-from tensorflow.keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.layers import Dense, Dropout, Flatten
+from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.constraints import MaxNorm
 from tensorflow.keras.optimizers import Adam
 
@@ -55,6 +55,8 @@ def draw_crosshairs(center, image_size, disk_size):
 
 # Draw line in plot between arbitrary points in plot. (Not currently used.)
 # eg: draw_line((100, 100), (924, 924), color="yellow")
+#     (See https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html
+#      for another approach)
 def draw_line(p1, p2, color="white"):
     plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color)
 
@@ -227,5 +229,139 @@ def timestamp_string():
     # Just assert that we want to use Pacific time, for the benefit of cwr.
     # The Colab server seems to think local time is UTC.
     return datetime.now(pytz.timezone('US/Pacific')).strftime('%Y%m%d_%H%M')
+
+
+# 20220108 WIP reference code from TexSyn
+
+#    // Generic interpolation
+#    template<typename F,typename T>
+#    T interpolate(const F& alpha, const T& x0, const T& x1)
+#    {
+#        return (x0 * (1 - alpha)) + (x1 * alpha);
+#    }
+
+# Generic interpolation
+def interpolate(alpha, x0, x1):
+    return (x0 * (1 - alpha)) + (x1 * alpha)
+
+
+#    // Constrain a given value "x" to be between two bounds: "bound0" and "bound1"
+#    // (without regard to order). Returns x if it is between the bounds, otherwise
+#    // returns the nearer bound.
+#    inline float clip(float x, float bound0, float bound1)
+#    {
+#        float clipped = x;
+#        float min = std::min(bound0, bound1);
+#        float max = std::max(bound0, bound1);
+#        if (clipped < min) clipped = min;
+#        if (clipped > max) clipped = max;
+#        return clipped;
+#    }
+
+# Constrain a given value "x" to be between two bounds: "bound0" and "bound1"
+# (without regard to order). Returns x if it is between the bounds, otherwise
+# returns the nearer bound.
+def clip(x, bound0, bound1):
+    clipped = x
+    min_bound = min(bound0, bound1)
+    max_bound = max(bound0, bound1)
+    if (clipped < min_bound):
+        clipped = min_bound
+    if (clipped > max_bound):
+        clipped = max_bound
+    return clipped
+
+#    inline float clip01 (const float x)
+#    {
+#        return clip(x, 0, 1);
+#    }
+
+def clip01 (x):
+    return clip(x, 0, 1)
+
+#    // Remap a value specified relative to a pair of bounding values
+#    // to the corresponding value relative to another pair of bounds.
+#    // Inspired by (dyna:remap-interval y y0 y1 z0 z1) circa 1984.
+#    inline float remapInterval(float x,
+#                               float in0, float in1,
+#                               float out0, float out1)
+#    {
+#        // Remap if input range is nonzero, otherwise blend them evenly.
+#        float input_range = in1 - in0;
+#        float blend = ((input_range > 0) ? ((x - in0) / input_range) : 0.5);
+#        return interpolate(blend, out0, out1);
+#    }
+
+# TODO -- note similar API in numpy
+# Remap a value specified relative to a pair of bounding values
+# to the corresponding value relative to another pair of bounds.
+# Inspired by (dyna:remap-interval y y0 y1 z0 z1) circa 1984.
+def remapInterval(x, in0, in1, out0, out1):
+    # Remap if input range is nonzero, otherwise blend them evenly.
+    blend = 0.5
+    input_range = in1 - in0;
+    if (input_range > 0):
+        blend = (x - in0) / input_range
+    return interpolate(blend, out0, out1)
+
+
+#    // Like remapInterval but the result is clipped to remain between out0 and out1
+#    inline float remapIntervalClip(float x,
+#                                   float in0, float in1,
+#                                   float out0, float out1)
+#    {
+#        return clip(remapInterval(x, in0, in1, out0, out1), out0, out1);
+#    }
+
+# Like remapInterval but the result is clipped to remain between out0 and out1
+def remapIntervalClip(x, in0, in1, out0, out1):
+    return clip(remapInterval(x, in0, in1, out0, out1), out0, out1)
+
+
+
+#    // Maps from 0 to 1 into a sinusoid ramp ("slow in, slow out") from 0 to 1.
+#    inline float sinusoid (float x)
+#    {
+#        return (1 - std::cos(x * M_PI)) / 2;
+#    }
+
+
+# Maps from 0 to 1 into a sinusoid ramp ("slow in, slow out") from 0 to 1.
+def sinusoid (x):
+    return (1 - math.cos(x * math.pi)) / 2;
+
+
+#    // Returns the scalar amplitude of a co-sinusoidal spot, for a given sample
+#    // position, and given spot parameters (center, inner_radius, outer_radius)
+#    // as in Spot::getColor(), etc. (TODO use it there?)
+#    float spot_utility(Vec2 position,
+#                       Vec2 center,
+#                       float inner_radius,
+#                       float outer_radius)
+#    {
+#        // Distance from sample position to spot center.
+#        float d = (position - center).length();
+#        // Fraction for interpolation: 0 inside, 1 outside, ramp between.
+#        float f = remapIntervalClip(d, inner_radius, outer_radius, 0, 1);
+#        // map interval [0, 1] to cosine curve.
+#        return 1 - sinusoid(f);
+#    }
+
+
+def dist2d(point1, point2):
+    offset = point1 - point2
+    # TODO there has GOT to be a cleaner "more pythonic" way to do this:
+    return math.sqrt(math.pow(offset[0], 2) + math.pow(offset[1], 2))
+
+# Returns the scalar amplitude of a co-sinusoidal spot, for a given sample
+# position, and given spot parameters (center, inner_radius, outer_radius).
+def spot_utility(position, center, inner_radius, outer_radius):
+    # Distance from sample position to spot center.
+#    d = (position - center).length();
+    d = dist2d(position, center)
+    # Fraction for interpolation: 0 inside, 1 outside, ramp between.
+    f = remapIntervalClip(d, inner_radius, outer_radius, 0, 1)
+    # map interval [0, 1] to cosine curve.
+    return 1 - sinusoid(f)
 
 ################################################################################
