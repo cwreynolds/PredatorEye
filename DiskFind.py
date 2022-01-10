@@ -6,6 +6,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import pytz
 from datetime import datetime
+import random
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -230,37 +231,46 @@ def timestamp_string():
     # The Colab server seems to think local time is UTC.
     return datetime.now(pytz.timezone('US/Pacific')).strftime('%Y%m%d_%H%M')
 
+# Reset random sequence seeds in Python's "random", Numpy, and TensorFlow.
+random_seed = 12345678
+def set_global_random_seed(seed):
+    global random_seed
+    random_seed = seed
+def reset_random_seeds(seed = random_seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
 
-# 20220108 WIP reference code from TexSyn
-
-#    // Generic interpolation
-#    template<typename F,typename T>
-#    T interpolate(const F& alpha, const T& x0, const T& x1)
-#    {
-#        return (x0 * (1 - alpha)) + (x1 * alpha);
-#    }
+#    # Distance between 2 points in 2d Euclidean space.
+#    # (TODO Should generalize to N dimensions)
+#    def dist2d(point1, point2):
+#        offset = point1 - point2
+#        # TODO there has GOT to be a cleaner "more pythonic" way to do this:
+#        return math.sqrt(math.pow(offset[0], 2) + math.pow(offset[1], 2))
+    
+# Distance between 2 points in 2d Euclidean space.
+# (TODO Should generalize to N dimensions)
+# (After Python 3.8 use math.dist: math.dist([1, 0, 0], [0, 1, 0]))
+def dist2d(point1, point2):
+    return np.sqrt(np.sum((point1 - point2) ** 2))
 
 # Generic interpolation
+# (20220108 borrowed from TexSyn's c++ Utilities package)
 def interpolate(alpha, x0, x1):
     return (x0 * (1 - alpha)) + (x1 * alpha)
 
-
-#    // Constrain a given value "x" to be between two bounds: "bound0" and "bound1"
-#    // (without regard to order). Returns x if it is between the bounds, otherwise
-#    // returns the nearer bound.
-#    inline float clip(float x, float bound0, float bound1)
-#    {
-#        float clipped = x;
-#        float min = std::min(bound0, bound1);
-#        float max = std::max(bound0, bound1);
-#        if (clipped < min) clipped = min;
-#        if (clipped > max) clipped = max;
-#        return clipped;
-#    }
+# # Informal tests:
+# print('df.interpolate(0, np.array([0, 0, 0]), np.array([0.1, 0.2, 0.3])) =',
+#       df.interpolate(0, np.array([0, 0, 0]), np.array([0.1, 0.2, 0.3])))
+# print('df.interpolate(0.5, np.array([0, 0, 0]), np.array([0.1, 0.2, 0.3])) =',
+#       df.interpolate(0.5, np.array([0, 0, 0]), np.array([0.1, 0.2, 0.3])))
+# print('df.interpolate(1, np.array([0, 0, 0]), np.array([0.1, 0.2, 0.3])) =',
+#       df.interpolate(1, np.array([0, 0, 0]), np.array([0.1, 0.2, 0.3])))
 
 # Constrain a given value "x" to be between two bounds: "bound0" and "bound1"
 # (without regard to order). Returns x if it is between the bounds, otherwise
 # returns the nearer bound.
+# (20220108 borrowed from TexSyn's c++ Utilities package)
 def clip(x, bound0, bound1):
     clipped = x
     min_bound = min(bound0, bound1)
@@ -271,31 +281,23 @@ def clip(x, bound0, bound1):
         clipped = max_bound
     return clipped
 
-#    inline float clip01 (const float x)
-#    {
-#        return clip(x, 0, 1);
-#    }
+# # Informal tests:
+# print('df.clip(-1, 0, 1) =', df.clip(-1, 0, 1))
+# print('df.clip(0, 0, 1) =', df.clip(0, 0, 1))
+# print('df.clip(0.5, 0, 1) =', df.clip(0.5, 0, 1))
+# print('df.clip(1, 0, 1) =', df.clip(1, 0, 1))
+# print('df.clip(2, 0, 1) =', df.clip(2, 0, 1))
 
+# Clip between 0 and 1.
+# (20220108 borrowed from TexSyn's c++ Utilities package)
 def clip01 (x):
     return clip(x, 0, 1)
 
-#    // Remap a value specified relative to a pair of bounding values
-#    // to the corresponding value relative to another pair of bounds.
-#    // Inspired by (dyna:remap-interval y y0 y1 z0 z1) circa 1984.
-#    inline float remapInterval(float x,
-#                               float in0, float in1,
-#                               float out0, float out1)
-#    {
-#        // Remap if input range is nonzero, otherwise blend them evenly.
-#        float input_range = in1 - in0;
-#        float blend = ((input_range > 0) ? ((x - in0) / input_range) : 0.5);
-#        return interpolate(blend, out0, out1);
-#    }
-
-# TODO -- note similar API in numpy
 # Remap a value specified relative to a pair of bounding values
 # to the corresponding value relative to another pair of bounds.
 # Inspired by (dyna:remap-interval y y0 y1 z0 z1) circa 1984.
+# (20220108 borrowed from TexSyn's c++ Utilities package)
+# TODO -- note similar API in numpy
 def remapInterval(x, in0, in1, out0, out1):
     # Remap if input range is nonzero, otherwise blend them evenly.
     blend = 0.5
@@ -304,64 +306,40 @@ def remapInterval(x, in0, in1, out0, out1):
         blend = (x - in0) / input_range
     return interpolate(blend, out0, out1)
 
-
-#    // Like remapInterval but the result is clipped to remain between out0 and out1
-#    inline float remapIntervalClip(float x,
-#                                   float in0, float in1,
-#                                   float out0, float out1)
-#    {
-#        return clip(remapInterval(x, in0, in1, out0, out1), out0, out1);
-#    }
-
 # Like remapInterval but the result is clipped to remain between out0 and out1
+# (20220108 borrowed from TexSyn's c++ Utilities package)
 def remapIntervalClip(x, in0, in1, out0, out1):
     return clip(remapInterval(x, in0, in1, out0, out1), out0, out1)
 
 
-
-#    // Maps from 0 to 1 into a sinusoid ramp ("slow in, slow out") from 0 to 1.
-#    inline float sinusoid (float x)
-#    {
-#        return (1 - std::cos(x * M_PI)) / 2;
-#    }
-
-
 # Maps from 0 to 1 into a sinusoid ramp ("slow in, slow out") from 0 to 1.
-def sinusoid (x):
+# (20220108 borrowed from TexSyn's c++ Utilities package)
+def sinusoid(x):
     return (1 - math.cos(x * math.pi)) / 2;
 
-
-#    // Returns the scalar amplitude of a co-sinusoidal spot, for a given sample
-#    // position, and given spot parameters (center, inner_radius, outer_radius)
-#    // as in Spot::getColor(), etc. (TODO use it there?)
-#    float spot_utility(Vec2 position,
-#                       Vec2 center,
-#                       float inner_radius,
-#                       float outer_radius)
-#    {
-#        // Distance from sample position to spot center.
-#        float d = (position - center).length();
-#        // Fraction for interpolation: 0 inside, 1 outside, ramp between.
-#        float f = remapIntervalClip(d, inner_radius, outer_radius, 0, 1);
-#        // map interval [0, 1] to cosine curve.
-#        return 1 - sinusoid(f);
-#    }
-
-
-def dist2d(point1, point2):
-    offset = point1 - point2
-    # TODO there has GOT to be a cleaner "more pythonic" way to do this:
-    return math.sqrt(math.pow(offset[0], 2) + math.pow(offset[1], 2))
+# print('df.sinusoid (0.00)', df.sinusoid (0.00))
+# print('df.sinusoid (0.25)', df.sinusoid (0.25))
+# print('df.sinusoid (0.50)', df.sinusoid (0.50))
+# print('df.sinusoid (0.75)', df.sinusoid (0.75))
+# print('df.sinusoid (1.00)', df.sinusoid (1.00))
 
 # Returns the scalar amplitude of a co-sinusoidal spot, for a given sample
 # position, and given spot parameters (center, inner_radius, outer_radius).
+# (20220108 borrowed from TexSyn's c++ Utilities package)
 def spot_utility(position, center, inner_radius, outer_radius):
     # Distance from sample position to spot center.
-#    d = (position - center).length();
     d = dist2d(position, center)
     # Fraction for interpolation: 0 inside, 1 outside, ramp between.
     f = remapIntervalClip(d, inner_radius, outer_radius, 0, 1)
     # map interval [0, 1] to cosine curve.
     return 1 - sinusoid(f)
+
+# # Informal tests:
+# print('df.spot_utility(np.array([1,1]), np.array([1,1]), 0, 1) =',
+#       df.spot_utility(np.array([1,1]), np.array([1,1]), 0, 1))
+# print('df.spot_utility(np.array([1,1]), np.array([0,1]), 0, 1) =',
+#       df.spot_utility(np.array([1,1]), np.array([0,1]), 0, 1))
+# print('df.spot_utility(np.array([0.5,0.5]), np.array([1,1]), 0, 1) =',
+#       df.spot_utility(np.array([0.5,0.5]), np.array([1,1]), 0, 1))
 
 ################################################################################
