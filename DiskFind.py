@@ -29,7 +29,7 @@ def relative_disk_radius():
 # Draw a training image on the log. First arg is either a 24 bit RGB pixel
 # representation as read from file, or the rescaled 3xfloat used internally.
 # Optionally draw crosshairs to show center of disk.
-def draw_image(rgb_pixel_tensor, center=(0,0)):
+def draw_image(rgb_pixel_tensor, center=(0, 0)):
     i24bit = []
     if ((rgb_pixel_tensor.dtype == np.float32) or
         (rgb_pixel_tensor.dtype == np.float32)):
@@ -127,12 +127,12 @@ def make_disk_finder_model(X_train):
 
 # Utility to fit and plot a run, again cribbed from DLAVA chapter B3.
 def run_model(model, X_train, y_train, X_test, y_test,
-              fcd_epochs, fcd_batch_size, plot_title):
+              epochs, batch_size, plot_title):
     history = model.fit(X_train,
                         y_train,
                         validation_data = (X_test, y_test),
-                        epochs=fcd_epochs,
-                        batch_size=fcd_batch_size)
+                        epochs=epochs,
+                        batch_size=batch_size)
     print()
     plot_accuracy_and_loss(history, plot_title)
     return history
@@ -341,5 +341,26 @@ def spot_utility(position, center, inner_radius, outer_radius):
 #       df.spot_utility(np.array([1,1]), np.array([0,1]), 0, 1))
 # print('df.spot_utility(np.array([0.5,0.5]), np.array([1,1]), 0, 1) =',
 #       df.spot_utility(np.array([0.5,0.5]), np.array([1,1]), 0, 1))
+
+################################################################################
+# Visualize labels, or model predictions, of some examples from a given dataset.
+################################################################################
+
+# Visualize labels, or model predictions, of a random sample of examples from a
+# given dataset. Must pass in a tensor of image tensors, one of EITHER a tensor
+# of labels (as xy of disk centers) OR a trained model for making predictions
+# from an image. Plus optionally a count of how many random examples to draw.
+# The labels (or predictions) are shown as overlaid crosshairs.
+def visualize_dataset(images, labels=None, model=None, count=10):
+    for i in range(count):
+        r = random.randrange(0, images.shape[0])
+        pixel_tensor = images[r, :, :, :]
+        center = (0, 0)
+        if model is None:
+            center = labels[r, :]
+        if labels is None:
+            center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
+        print(r, ": (", center[0], ",", center[1], ")")
+        draw_image(pixel_tensor, center)
 
 ################################################################################
