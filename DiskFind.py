@@ -252,7 +252,7 @@ def reset_random_seeds(seed = random_seed):
 # (TODO Should generalize to N dimensions)
 # (After Python 3.8 use math.dist: math.dist([1, 0, 0], [0, 1, 0]))
 def dist2d(point1, point2):
-    return np.sqrt(np.sum((point1 - point2) ** 2))
+    return np.sqrt(np.sum((np.array(point1) - np.array(point2)) ** 2))
 
 # Generic interpolation
 # (20220108 borrowed from TexSyn's c++ Utilities package)
