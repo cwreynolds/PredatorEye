@@ -364,3 +364,119 @@ def visualize_dataset(images, labels=None, model=None, count=10):
         draw_image(pixel_tensor, center)
 
 ################################################################################
+# Soft matte image compositing tool.
+################################################################################
+
+# Matte (composite) one "foreground" RGB image over another "background" image,
+# according to per-pixel scalar alpha weights in "matte".
+def soft_matte(foreground, background, matte):
+
+    # Multiply given (RGB) image by weights in given (single channel) matte.
+    def weighted_element(image, matte):
+        w = image.shape[0]
+        h = image.shape[1]
+        reshape_image = image.reshape(w * h, 3).T
+        reshape_matte = matte.reshape(w * h, 1).T
+        alpha_reshape = reshape_matte * reshape_image
+        alpha = alpha_reshape.T.reshape([w, h, 3])
+        return alpha
+
+    # Intended as more specific error messages for mismatch of args.
+    def check_args(foreground, background, matte):
+        assert foreground.shape[2] == 3, "'foreground' should be 3 floats deep"
+        assert background.shape[2] == 3, "'background' should be 3 floats deep"
+        assert matte.shape[2] == 1, "'matte' should be 1 float deep"
+        a = foreground.shape[0:1] == matte.shape[0:1]
+        assert a, "width or height of 'foreground' and 'matte' do not match"
+        a = background.shape[0:1] == matte.shape[0:1]
+        assert a, "width or height of 'background' and 'matte' do not match"
+
+    # Check args, then sum two image arguments, weighted by matte and inverse.
+    check_args(foreground, background, matte)
+    return (weighted_element(foreground, matte) +
+            weighted_element(background, 1 - matte))
+
+################################################################################
+# Soft matte image compositing tool.
+################################################################################
+
+# Generate a soft disk matte, an array with shape (diameter, diameter, 1).
+# Uses the TexSyn Spot parameters: inner_radius and outer_radius.
+def make_disk_matte(diameter, inner_radius, outer_radius):
+    # Coerce diameter to be int, to be used as an index for pixels.
+    diameter = round(diameter)
+    # Make the array to return.
+    image = np.zeros((diameter, diameter, 1), dtype=np.float32)
+    # Centerpoint of disk (as float, independent of pixel boundaries).
+    cp = (diameter / 2.0, diameter / 2.0)
+    # Loop over all pixel coordiantes (xi, yi) with (xf, yf) as center of pixel.
+    for xi in range(diameter):
+        xf = xi + 0.5
+        for yi in range(diameter):
+            yf = yi + 0.5
+            image[xi, yi, :] = spot_utility((xf, yf), cp,
+                                                inner_radius, outer_radius)
+    return image
+
+################################################################################
+# Low pass filtering.
+################################################################################
+
+def lpf_3x3_box(image):
+    s = image.shape
+    filtered = np.empty(s, dtype=np.float32)
+    for x in range(s[0]):
+        for y in range(s[1]):
+            sum = [0,0,0]
+            count = 0
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    p = x + i
+                    q = y + j
+                    if (p >= 0) and (q >= 0) and (p < s[0]) and (q < s[1]):
+                        count += 1
+                        sum += image[p, q, :]
+            filtered[x, y, :] = sum / count
+    return filtered
+
+def lpf_3x3(image):
+    s = image.shape
+    filtered = np.empty(s, dtype=np.float32)
+    kernel = np.array([[1, 2, 1],
+                       [2, 4, 2],
+                       [1, 2, 1]])
+    for x in range(s[0]):
+        for y in range(s[1]):
+            sum = [0,0,0]
+            count = 0
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    p = x + i
+                    q = y + j
+                    if (p >= 0) and (q >= 0) and (p < s[0]) and (q < s[1]):
+                        # count += 1
+                        # sum += image[p, q, :]
+                        w = kernel[i - 1, j - 1]
+                        count += w
+                        sum += image[p, q, :] * w
+            filtered[x, y, :] = sum / count
+    return filtered
+
+################################################################################
+# Checkerboard test pattern.
+################################################################################
+
+# Generate image (rgb pixel tensor) with a black and white checkerboard pattern.
+def make_checkerboard(size, half_wavelength, c0=[0,0,0], c1=[1,1,1]):
+    # image = np.zeros((size, size, 3), dtype=np.float32)
+    image = np.empty((size, size, 3), dtype=np.float32)
+    image[:,:,:] = c0
+    for x in range(size):
+        for y in range(size):
+            if 0 == ((int(x / half_wavelength) + int(y / half_wavelength)) % 2):
+                # image[x, y, :] = [1, 1, 1]
+                image[x, y, :] = c1
+    return image
+
+################################################################################
+
