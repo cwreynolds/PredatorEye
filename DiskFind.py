@@ -367,34 +367,62 @@ def visualize_dataset(images, labels=None, model=None, count=10):
 # Soft matte image compositing tool.
 ################################################################################
 
+## Matte (composite) one "foreground" RGB image over another "background" image,
+## according to per-pixel scalar alpha weights in "matte".
+#def soft_matte(foreground, background, matte):
+#
+#    # Multiply given (RGB) image by weights in given (single channel) matte.
+#    def weighted_element(image, matte):
+#        w = image.shape[0]
+#        h = image.shape[1]
+#        reshape_image = image.reshape(w * h, 3).T
+#        reshape_matte = matte.reshape(w * h, 1).T
+#        alpha_reshape = reshape_matte * reshape_image
+#        alpha = alpha_reshape.T.reshape([w, h, 3])
+#        return alpha
+#
+#    # Intended as more specific error messages for mismatch of args.
+#    def check_args(foreground, background, matte):
+#        assert foreground.shape[2] == 3, "'foreground' should be 3 floats deep"
+#        assert background.shape[2] == 3, "'background' should be 3 floats deep"
+#        assert matte.shape[2] == 1, "'matte' should be 1 float deep"
+#        a = foreground.shape[0:1] == matte.shape[0:1]
+#        assert a, "width or height of 'foreground' and 'matte' do not match"
+#        a = background.shape[0:1] == matte.shape[0:1]
+#        assert a, "width or height of 'background' and 'matte' do not match"
+#
+#    # Check args, then sum two image arguments, weighted by matte and inverse.
+#    check_args(foreground, background, matte)
+#    return (weighted_element(foreground, matte) +
+#            weighted_element(background, 1 - matte))
+
 # Matte (composite) one "foreground" RGB image over another "background" image,
 # according to per-pixel scalar alpha weights in "matte".
 def soft_matte(foreground, background, matte):
-
-    # Multiply given (RGB) image by weights in given (single channel) matte.
-    def weighted_element(image, matte):
-        w = image.shape[0]
-        h = image.shape[1]
-        reshape_image = image.reshape(w * h, 3).T
-        reshape_matte = matte.reshape(w * h, 1).T
-        alpha_reshape = reshape_matte * reshape_image
-        alpha = alpha_reshape.T.reshape([w, h, 3])
-        return alpha
-
-    # Intended as more specific error messages for mismatch of args.
-    def check_args(foreground, background, matte):
-        assert foreground.shape[2] == 3, "'foreground' should be 3 floats deep"
-        assert background.shape[2] == 3, "'background' should be 3 floats deep"
-        assert matte.shape[2] == 1, "'matte' should be 1 float deep"
-        a = foreground.shape[0:1] == matte.shape[0:1]
-        assert a, "width or height of 'foreground' and 'matte' do not match"
-        a = background.shape[0:1] == matte.shape[0:1]
-        assert a, "width or height of 'background' and 'matte' do not match"
-
-    # Check args, then sum two image arguments, weighted by matte and inverse.
-    check_args(foreground, background, matte)
+    check_args_for_soft_matte(foreground, background, matte)
+    # Sum the two images, weighted by matte and its inverse.
     return (weighted_element(foreground, matte) +
             weighted_element(background, 1 - matte))
+            
+# Multiply each pixel of an (RGB) image by weights in a (single channel) matte.
+def weighted_element(image, matte):
+    w = image.shape[0]
+    h = image.shape[1]
+    reshape_image = image.reshape(w * h, 3).T
+    reshape_matte = matte.reshape(w * h, 1).T
+    alpha_reshape = reshape_matte * reshape_image
+    alpha = alpha_reshape.T.reshape([w, h, 3])
+    return alpha
+
+# Intended as more specific error messages for mismatch of args.
+def check_args_for_soft_matte(foreground, background, matte):
+    assert foreground.shape[2] == 3, "'foreground' should be 3 floats deep"
+    assert background.shape[2] == 3, "'background' should be 3 floats deep"
+    assert matte.shape[2] == 1, "'matte' should be 1 float deep"
+    a = foreground.shape[0:1] == matte.shape[0:1]
+    assert a, "width or height of 'foreground' and 'matte' do not match"
+    a = background.shape[0:1] == matte.shape[0:1]
+    assert a, "width or height of 'background' and 'matte' do not match"
 
 ################################################################################
 # Soft matte image compositing tool.
