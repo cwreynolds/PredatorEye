@@ -425,7 +425,7 @@ def check_args_for_soft_matte(foreground, background, matte):
     assert a, "width or height of 'background' and 'matte' do not match"
 
 ################################################################################
-# Soft matte image compositing tool.
+# Generate a matte for "soft edged spot".
 ################################################################################
 
 # Generate a soft disk matte, an array with shape (diameter, diameter, 1).
@@ -437,13 +437,13 @@ def make_disk_matte(diameter, inner_radius, outer_radius):
     image = np.zeros((diameter, diameter, 1), dtype=np.float32)
     # Centerpoint of disk (as float, independent of pixel boundaries).
     cp = (diameter / 2.0, diameter / 2.0)
-    # Loop over all pixel coordiantes (xi, yi) with (xf, yf) as center of pixel.
+    # Loop over all pixel coordinates (xi, yi) with (xf, yf) as center of pixel.
     for xi in range(diameter):
         xf = xi + 0.5
         for yi in range(diameter):
             yf = yi + 0.5
             image[xi, yi, :] = spot_utility((xf, yf), cp,
-                                                inner_radius, outer_radius)
+                                            inner_radius, outer_radius)
     return image
 
 ################################################################################
