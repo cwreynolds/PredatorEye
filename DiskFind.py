@@ -139,24 +139,33 @@ def run_model(model, X_train, y_train, X_test, y_test,
 
 # A little utility to draw plots of accuracy and loss.
 def plot_accuracy_and_loss(history, plot_title):
-    xs = range(len(history.history['accuracy']))
+
+    # TODO experiment Skip First Epoch -- do not plot first epoch
+    # My FCD losses are so high on the first epoch that it swamps the plot.
+    def sfe(e_list):
+        return e_list[1:]
+    
+#    xs = range(len(history.history['accuracy']))
+    xs = range(len(sfe(history.history['accuracy'])))
     # plt.figure(figsize=(10,3))
     plt.figure(figsize=(15,3))
 
     # plt.subplot(1, 2, 1)
     plt.subplot(1, 3, 1)
-    plt.plot(xs, history.history['accuracy'], label='train')
-    plt.plot(xs, history.history['val_accuracy'], label='validation')
+#    plt.plot(xs, history.history['accuracy'], label='train')
+#    plt.plot(xs, history.history['val_accuracy'], label='validation')
+    plt.plot(xs, sfe(history.history['accuracy']), label='train')
+    plt.plot(xs, sfe(history.history['val_accuracy']), label='validation')
     plt.legend(loc='lower left')
     plt.xlabel('epochs')
     plt.ylabel('accuracy')
     plt.title(plot_title+': Accuracy')
 
     plt.subplot(1, 3, 2)
-    # plt.plot(xs, history.history['fcd_prediction_inside_disk'], label='train')
-    # plt.plot(xs, history.history['val_fcd_prediction_inside_disk'], label='validation')
-    plt.plot(xs, history.history['in_disk'], label='train')
-    plt.plot(xs, history.history['val_in_disk'], label='validation')
+#    plt.plot(xs, history.history['in_disk'], label='train')
+#    plt.plot(xs, history.history['val_in_disk'], label='validation')
+    plt.plot(xs, sfe(history.history['in_disk']), label='train')
+    plt.plot(xs, sfe(history.history['val_in_disk']), label='validation')
     plt.legend(loc='lower left')
     plt.xlabel('epochs')
     plt.ylabel('fraction inside disk')
@@ -164,8 +173,10 @@ def plot_accuracy_and_loss(history, plot_title):
 
     # plt.subplot(1, 2, 2)
     plt.subplot(1, 3, 3)
-    plt.plot(xs, history.history['loss'], label='train')
-    plt.plot(xs, history.history['val_loss'], label='validation')
+#    plt.plot(xs, history.history['loss'], label='train')
+#    plt.plot(xs, history.history['val_loss'], label='validation')
+    plt.plot(xs, sfe(history.history['loss']), label='train')
+    plt.plot(xs, sfe(history.history['val_loss']), label='validation')
     plt.legend(loc='upper left')
     plt.xlabel('epochs')
     plt.ylabel('loss')
@@ -507,4 +518,19 @@ def make_checkerboard(size, half_wavelength, c0=[0,0,0], c1=[1,1,1]):
     return image
 
 ################################################################################
+# Read label (disk centerpoint) encoded in FCD filename.
+################################################################################
 
+# Parse FCD filename to a list of two ints: (x, y) pixel coordinates.
+def fcd_filename_to_xy_ints(filename):
+    without_extension = filename.split('.')[0]
+    two_numeric_strings = without_extension.split('_')[1:3]
+    return list(map(int, two_numeric_strings))
+
+# Get image label from image file names ([x, y] as floats on [0,1])
+# def fcd_normalized_xy(filename, pixels):
+def fcd_normalized_xy(filename, pixels, input_scale = 1):
+    pixel_coordinates = fcd_filename_to_xy_ints(filename)
+    return pixel_coordinates / (np.array(pixels.shape)[1:2] / input_scale)
+
+################################################################################
