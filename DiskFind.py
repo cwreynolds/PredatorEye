@@ -26,21 +26,32 @@ def relative_disk_radius():
 # Draw utilities
 ################################################################################
 
+################################################################################
+# Draw utilities
+################################################################################
+
 # Draw a training image on the log. First arg is either a 24 bit RGB pixel
 # representation as read from file, or the rescaled 3xfloat used internally.
 # Optionally draw crosshairs to show center of disk.
-def draw_image(rgb_pixel_tensor, center=(0, 0)):
+def draw_image(rgb_pixel_tensor, label=None, prediction=None):
     i24bit = []
     if ((rgb_pixel_tensor.dtype == np.float32) or
-        (rgb_pixel_tensor.dtype == np.float32)):
+        (rgb_pixel_tensor.dtype == np.float64)):
         unscaled_pixels = np.interp(rgb_pixel_tensor, [0, 1], [0, 255])
         i24bit = Image.fromarray(unscaled_pixels.astype('uint8'), mode='RGB')
     else:
         i24bit = Image.fromarray(rgb_pixel_tensor)
     plt.imshow(i24bit)
-    if ((center[0] != 0) or (center[1] != 0)):
-        width = rgb_pixel_tensor.shape[0]
-        draw_crosshairs(center, width, width * fcd_relative_disk_size)
+    image_width = rgb_pixel_tensor.shape[0]
+    disk_width = image_width * fcd_relative_disk_size
+    if label is not None:
+        # width = rgb_pixel_tensor.shape[0]
+        # draw_crosshairs(center, width, width * fcd_relative_disk_size)
+        # draw_crosshairs(label, width, width * fcd_relative_disk_size)
+        draw_crosshairs(label, image_width, disk_width)
+    if prediction is not None:
+        prediction = np.array(prediction) * image_width
+        draw_circle(prediction, disk_width)
     plt.show()
 
 # Draw crosshairs to indicate disk position (label or estimate).
@@ -60,6 +71,25 @@ def draw_crosshairs(center, image_size, disk_size):
 #      for another approach)
 def draw_line(p1, p2, color="white"):
     plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color)
+
+# Draw a circle, dashed black and white, with given xy "center" and "diameter"
+# both specified in pixel units.
+def draw_circle(center, diameter):
+    center = np.array(center)
+    r = diameter / 2
+    color = 'black'
+    prev_angle = 0
+    steps = 24
+    for i in range(steps):
+        next_angle = (i + 1) * 2 * math.pi / steps
+        prev_point = np.array((math.sin(prev_angle), math.cos(prev_angle)))
+        next_point = np.array((math.sin(next_angle), math.cos(next_angle)))
+        draw_line(center + prev_point * r, center + next_point * r, color)
+        if color == 'black':
+            color = 'white'
+        else:
+            color = 'black'
+        prev_angle = next_angle
 
 ################################################################################
 # Keras model utilities
@@ -357,6 +387,23 @@ def spot_utility(position, center, inner_radius, outer_radius):
 # Visualize labels, or model predictions, of some examples from a given dataset.
 ################################################################################
 
+#    # Visualize labels, or model predictions, of a random sample of examples from a
+#    # given dataset. Must pass in a tensor of image tensors, one of EITHER a tensor
+#    # of labels (as xy of disk centers) OR a trained model for making predictions
+#    # from an image. Plus optionally a count of how many random examples to draw.
+#    # The labels (or predictions) are shown as overlaid crosshairs.
+#    def visualize_dataset(images, labels=None, model=None, count=10):
+#        for i in range(count):
+#            r = random.randrange(0, images.shape[0])
+#            pixel_tensor = images[r, :, :, :]
+#            center = (0, 0)
+#            if model is None:
+#                center = labels[r, :]
+#            if labels is None:
+#                center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
+#            print(r, ": (", center[0], ",", center[1], ")")
+#            draw_image(pixel_tensor, center)
+
 # Visualize labels, or model predictions, of a random sample of examples from a
 # given dataset. Must pass in a tensor of image tensors, one of EITHER a tensor
 # of labels (as xy of disk centers) OR a trained model for making predictions
@@ -366,13 +413,21 @@ def visualize_dataset(images, labels=None, model=None, count=10):
     for i in range(count):
         r = random.randrange(0, images.shape[0])
         pixel_tensor = images[r, :, :, :]
-        center = (0, 0)
-        if model is None:
-            center = labels[r, :]
-        if labels is None:
-            center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
-        print(r, ": (", center[0], ",", center[1], ")")
-        draw_image(pixel_tensor, center)
+#        center = (0, 0)
+        label = None
+        prediction = None
+#        if model is None:
+#            center = labels[r, :]
+#        if labels is None:
+#            center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
+        if labels is not None:
+            label = labels[r, :]
+        if model is not None:
+            prediction = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
+#        print(r, ": (", center[0], ",", center[1], ")")
+        print(r)
+#        draw_image(pixel_tensor, center)
+        draw_image(pixel_tensor, label, prediction)
 
 ################################################################################
 # Soft matte image compositing tool.
