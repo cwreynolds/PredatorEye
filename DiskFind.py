@@ -102,6 +102,11 @@ def read_image_file_as_pixel_tensor(image_pathname):
     pixel_tensor = np.interp(pixel_tensor, [0, 255], [0, 1]).astype(np.float32)
     return pixel_tensor
 
+def check_pixel_tensor(pixel_tensor, shape=(128,128,3), min=0.0, max=1.0):
+    return ((pixel_tensor.shape == shape) and
+            (np.min(pixel_tensor) >= min) and
+            (np.max(pixel_tensor) <= max))
+
 ################################################################################
 # Keras model utilities
 ################################################################################
