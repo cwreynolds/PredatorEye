@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import PIL
 import math
+import pytz
+import random
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-import pytz
 from datetime import datetime
-import random
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -21,10 +22,6 @@ fcd_relative_disk_size = 201.0 / 1024.0
 # Calculates RELATIVE disk radius on the fly -- rewrite later.
 def relative_disk_radius():
     return fcd_relative_disk_size / 2
-
-################################################################################
-# Draw utilities
-################################################################################
 
 ################################################################################
 # Draw utilities
@@ -90,6 +87,20 @@ def draw_circle(center, diameter):
         else:
             color = 'black'
         prev_angle = next_angle
+
+################################################################################
+# Read in a 24 bit RGB image from given pathname. Return (,,3) pixel tensor
+# (usually (128, 128, 3)) with color component values on [0, 1].
+################################################################################
+
+def read_image_file_as_pixel_tensor(image_pathname):
+    # Read image file.
+    image = PIL.Image.open(image_pathname)
+    # Convert to numpy pixel tensor as 32 bit floats.
+    pixel_tensor = np.asarray(image, dtype=np.float32)
+    # Scale input image data to range [0, 1]
+    pixel_tensor = np.interp(pixel_tensor, [0, 255], [0, 1]).astype(np.float32)
+    return pixel_tensor
 
 ################################################################################
 # Keras model utilities
