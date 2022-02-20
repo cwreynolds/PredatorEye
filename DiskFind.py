@@ -420,29 +420,48 @@ def spot_utility(position, center, inner_radius, outer_radius):
 #            print(r, ": (", center[0], ",", center[1], ")")
 #            draw_image(pixel_tensor, center)
 
-# Visualize labels, or model predictions, of a random sample of examples from a
-# given dataset. Must pass in a tensor of image tensors, one of EITHER a tensor
-# of labels (as xy of disk centers) OR a trained model for making predictions
-# from an image. Plus optionally a count of how many random examples to draw.
-# The labels (or predictions) are shown as overlaid crosshairs.
+#    # Visualize labels, or model predictions, of a random sample of examples from a
+#    # given dataset. Must pass in a tensor of image tensors, one of EITHER a tensor
+#    # of labels (as xy of disk centers) OR a trained model for making predictions
+#    # from an image. Plus optionally a count of how many random examples to draw.
+#    # The labels (or predictions) are shown as overlaid crosshairs.
+#    def visualize_dataset(images, labels=None, model=None, count=10):
+#        for i in range(count):
+#            r = random.randrange(0, images.shape[0])
+#            pixel_tensor = images[r, :, :, :]
+#    #        center = (0, 0)
+#            label = None
+#            prediction = None
+#    #        if model is None:
+#    #            center = labels[r, :]
+#    #        if labels is None:
+#    #            center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
+#            if labels is not None:
+#                label = labels[r, :]
+#            if model is not None:
+#                prediction = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
+#    #        print(r, ": (", center[0], ",", center[1], ")")
+#            print(r)
+#    #        draw_image(pixel_tensor, center)
+#            draw_image(pixel_tensor, label, prediction)
+
+# Visualize labels, and/or model predictions, of a random sample of examples
+# from a given dataset. Must pass in a tensor of image tensors, and optionally
+# a tensor of labels (as xy of disk centers), and/or a trained model for making
+# predictions from an image. Plus optionally a count of how many random examples
+# to draw. The labels are shown as overlaid crosshairs, predictions are shown as
+# b/w circles
 def visualize_dataset(images, labels=None, model=None, count=10):
     for i in range(count):
         r = random.randrange(0, images.shape[0])
         pixel_tensor = images[r, :, :, :]
-#        center = (0, 0)
         label = None
         prediction = None
-#        if model is None:
-#            center = labels[r, :]
-#        if labels is None:
-#            center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
         if labels is not None:
             label = labels[r, :]
         if model is not None:
             prediction = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
-#        print(r, ": (", center[0], ",", center[1], ")")
         print(r)
-#        draw_image(pixel_tensor, center)
         draw_image(pixel_tensor, label, prediction)
 
 ################################################################################
