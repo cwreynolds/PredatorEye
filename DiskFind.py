@@ -69,9 +69,28 @@ def draw_crosshairs(center, image_size, disk_size):
 def draw_line(p1, p2, color="white"):
     plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color)
 
+#    # Draw a circle, dashed black and white, with given xy "center" and "diameter"
+#    # both specified in pixel units.
+#    def draw_circle(center, diameter):
+#        center = np.array(center)
+#        r = diameter / 2
+#        color = 'black'
+#        prev_angle = 0
+#        steps = 24
+#        for i in range(steps):
+#            next_angle = (i + 1) * 2 * math.pi / steps
+#            prev_point = np.array((math.sin(prev_angle), math.cos(prev_angle)))
+#            next_point = np.array((math.sin(next_angle), math.cos(next_angle)))
+#            draw_line(center + prev_point * r, center + next_point * r, color)
+#            if color == 'black':
+#                color = 'white'
+#            else:
+#                color = 'black'
+#            prev_angle = next_angle
+
 # Draw a circle, dashed black and white, with given xy "center" and "diameter"
 # both specified in pixel units.
-def draw_circle(center, diameter):
+def draw_circle(center, diameter, draw_cross=True):
     center = np.array(center)
     r = diameter / 2
     color = 'black'
@@ -87,6 +106,12 @@ def draw_circle(center, diameter):
         else:
             color = 'black'
         prev_angle = next_angle
+    if (draw_cross)
+        size = diameter * 0.3
+        half_v = [0, size / 2]
+        half_h = [size / 2, 0]
+        draw_line(center - half_v, center + half_v, white)
+        draw_line(center - half_h, center + half_h, black)
 
 ################################################################################
 # Read in a 24 bit RGB image from given pathname. Return (,,3) pixel tensor
