@@ -106,12 +106,12 @@ def draw_circle(center, diameter, draw_cross=True):
         else:
             color = 'black'
         prev_angle = next_angle
-    if (draw_cross)
+    if (draw_cross):
         size = diameter * 0.3
         half_v = [0, size / 2]
         half_h = [size / 2, 0]
-        draw_line(center - half_v, center + half_v, white)
-        draw_line(center - half_h, center + half_h, black)
+        draw_line(center - half_v, center + half_v, 'white')
+        draw_line(center - half_h, center + half_h, 'black')
 
 ################################################################################
 # Read in a 24 bit RGB image from given pathname. Return (,,3) pixel tensor
