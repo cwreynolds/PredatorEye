@@ -51,6 +51,11 @@ def draw_image(rgb_pixel_tensor, label=None, prediction=None):
         draw_circle(prediction, disk_width)
     plt.show()
 
+# TODO 20220410 very hacky temp utility for EvoCamoVsLearningPredator.ipynb
+# Allows drawing custom annotation on top of image.
+def draw_image_plt_show():
+    plt.show()
+
 # Draw crosshairs to indicate disk position (label or estimate).
 def draw_crosshairs(center, image_size, disk_size):
     m = image_size - 1       # max image coordinate
