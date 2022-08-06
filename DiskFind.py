@@ -197,9 +197,27 @@ def make_disk_finder_model(X_train):
     model.add(Dense(8, activation=dense_act))
     model.add(Dense(2, activation=output_act))
 
+    ############################################################################
+    # TODO 20220805 break off DiskFind.compile_disk_finder_model()
+    #               off from DiskFind.make_disk_finder_model()
+    # # Compile with mse loss, tracking accuracy and fraction-inside-disk.
+    # model.compile(loss='mse', optimizer='adam', metrics=["accuracy", in_disk])
+    # Compile new model.
+    compile_disk_finder_model(model)
+    ############################################################################
+    return model
+
+################################################################################
+# TODO 20220805 break off DiskFind.compile_disk_finder_model()
+#               off from DiskFind.make_disk_finder_model()
+
+# Compile a disk finder model.
+# Compile a disk finder model with mse loss, tracking accuracy and in_disk.
+def compile_disk_finder_model(model):
     # Compile with mse loss, tracking accuracy and fraction-inside-disk.
     model.compile(loss='mse', optimizer='adam', metrics=["accuracy", in_disk])
-    return model
+
+################################################################################
 
 # Utility to fit and plot a run, again cribbed from DLAVA chapter B3.
 def run_model(model, X_train, y_train, X_test, y_test,
