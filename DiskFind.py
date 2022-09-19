@@ -672,3 +672,26 @@ def fcd_normalized_xy(filename, pixels, input_scale = 1):
     return pixel_coordinates / (np.array(pixels.shape)[1:2] / input_scale)
 
 ################################################################################
+
+################################################################################
+# TODO 20220919 moved these here from EvoCamoVsLearnPredPop.py
+
+# Given 3 prey positions ("xy3"), sort them by proximity to "point" (prediction)
+def sort_xy3_by_proximity_to_point(xy3, point):
+    # print('xy3 =', xy3)
+    xy3_plus_distance = [[dist2d(xy, point), xy] for xy in xy3]
+    # print('xy3_plus_distance =', xy3_plus_distance)
+    sorted_xy3_plus_key = sorted(xy3_plus_distance, key=lambda x: x[0])
+    # print('sorted_xy3_plus_key =', sorted_xy3_plus_key)
+    sorted_xy3 = [x[1] for x in sorted_xy3_plus_key]
+    # print('sorted_xy3 =', sorted_xy3)
+    return sorted_xy3
+
+# Convert xy3 to string: [[x,y], [p,q], [r,s]] -> 'x y p q r s '
+def xy3_to_str(xy3):
+    return ''.join('%s ' % i for i in flatten_nested_list(xy3))
+
+def flatten_nested_list(nested_list):
+    return [item for sublist in nested_list for item in sublist]
+    
+################################################################################
