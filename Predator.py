@@ -2,10 +2,12 @@
 # coding: utf-8
 ################################################################################
 #
-# Predator class
 # Predator.py
+# Predator class
+# PredatorEye system
 #
 # 20220919 Split off from EvoCamoVsLearnPredPop.py (from ...ipynb)
+# Copyright © 2022 Craig Reynolds. All rights reserved.
 #
 ################################################################################
 
@@ -14,6 +16,7 @@ import random
 import numpy as np
 import DiskFind as df
 import tensorflow as tf
+from FineTuningDataset import FineTuningDataset
 
 class Predator:
     """Represents a Predator in the camouflage simulation. It has a CNN-based
@@ -76,14 +79,17 @@ class Predator:
               '(nearest_center =', nc, ', steps =', self.step + 1, ')')
 
         # Convert training data list to np arrays
-        images_array = np.array(fine_tuning_dataset.fine_tune_images)
-        labels_array = np.array([x[0] for x in fine_tuning_dataset.fine_tune_labels])
+#        images_array = np.array(fine_tuning_dataset.fine_tune_images)
+#        labels_array = np.array([x[0] for x in fine_tuning_dataset.fine_tune_labels])
+        images_array = np.array(FineTuningDataset().fine_tune_images)
+        labels_array = np.array([x[0] for x in FineTuningDataset().fine_tune_labels])
 
         # print('images_array.shape =', images_array.shape,
         #       '-- labels_array.shape =', labels_array.shape)
 
         # Skip fine-tuning until dataset is large enough (10% of max size).
-        if images_array.shape[0] > (fine_tuning_dataset.max_training_set_size * 0.1):
+#        if images_array.shape[0] > (fine_tuning_dataset.max_training_set_size * 0.1):
+        if images_array.shape[0] > (FineTuningDataset().max_training_set_size * 0.1):
             # TODO 20220823 -- run fine-tuning on CPU only.
             print('Running on CPU ONLY!')
             with tf.device('/cpu:0'):
@@ -171,7 +177,8 @@ class Predator:
     # Maintain record of recent hunts and which ones were successfu.
     def record_predation_success(self, prediction_xy, prey_centers_xy3):
         radius = df.relative_disk_radius()
-        distance = aim_error(prediction_xy, prey_centers_xy3)
+#        distance = aim_error(prediction_xy, prey_centers_xy3)
+        distance = df.aim_error(prediction_xy, prey_centers_xy3)
         # Append a 0 (fail) or 1 (succeed) to history.
         self.successes.append(0 if distance < radius else 1)
         # Trim to max length.

@@ -85,9 +85,8 @@ else:
     sys.path.append('/Users/cwr/Documents/code/PredatorEye/')
 import DiskFind as df
 
-#import Predator
-#import Predator as Predator
 from Predator import Predator
+from FineTuningDataset import FineTuningDataset
 
 
 # # Ad hoc “predator server”
@@ -147,9 +146,36 @@ def write_response_file(step, directory):
     print('Wrote ' + "'" + response_string + "'",
           'to response file', Path(make_find_pathname(step, directory)).name)
     
+    ############################################################################
+    # TODO 20220920 move class to own file FineTuningDataset.py
+
+#    # Merge this step's image into fine-tuning dataset, and related bookkeeping.
+#    best_prediction = tournament.ranked_predictions()[0]
+#    fine_tuning_dataset.update(pixel_tensor, best_prediction, step, directory)
+
+#    # Merge this step's image into fine-tuning dataset, and related bookkeeping.
+#    best_prediction = tournament.ranked_predictions()[0]
+#    FineTuningDataset.fine_tuning_dataset.update(pixel_tensor,
+#                                                 best_prediction,
+#                                                 step, directory)
+
+#    # Merge this step's image into fine-tuning dataset, and related bookkeeping.
+#    best_prediction = tournament.ranked_predictions()[0]
+#    FineTuningDataset().update(pixel_tensor, best_prediction, step, directory)
+
     # Merge this step's image into fine-tuning dataset, and related bookkeeping.
     best_prediction = tournament.ranked_predictions()[0]
-    fine_tuning_dataset.update(pixel_tensor, best_prediction, step, directory)
+#    FineTuningDataset().update(pixel_tensor,
+#                               best_prediction,
+#                               step,
+#                               directory)
+    FineTuningDataset().update(pixel_tensor,
+                               best_prediction,
+                               prey_centers_xy3,
+                               step,
+                               directory)
+
+    ############################################################################
 
     # Update the Predator population in case of starvation.
     tournament.update_predator_population()
@@ -351,46 +377,49 @@ def read_default_pre_trained_model():
     print('Reading pre-trained model from:', trained_model)
     return keras.models.load_model(trained_model, custom_objects=dependencies)
 
-
-# # FineTuningDataset
-
-# In[4]:
-
-
-class FineTuningDataset:
-    """Manages the dataset of images and labels for fine-tuning."""
-
-    # Accumulated a new “training set” of the most recent N steps seen so far. (See
-    # https://cwreynolds.github.io/TexSyn/#20220421 and ...#20220424 for discussion
-    # of this parameter. Had been 1, then 100, then 200, then finally, infinity.) 
-    # max_training_set_size = float('inf') # keep ALL steps in training set, use GPU.
-    max_training_set_size = 500 # Try smaller again, "yellow flowers" keeps failing.
-    # List of "pixel tensors".
-    fine_tune_images = []
-    # List of xy3 [[x,y],[x,y],[x,y]] for 3 prey centers.
-    fine_tune_labels = []
-
-    def update(self, pixel_tensor, prediction, step, directory):
-        # Assume the predator was "aiming for" that one but missed by a bit.
-        xy3 = read_3_centers_from_file(step, directory)
-        sorted_xy3 = df.sort_xy3_by_proximity_to_point(xy3, prediction)
-
-        # Accumulate the most recent "max_training_set_size" training samples.
-        self.fine_tune_images.append(pixel_tensor)
-        self.fine_tune_labels.append(sorted_xy3)
-
-        # If training set has become too large, slice off first element of each.
-        if len(self.fine_tune_images) > self.max_training_set_size:
-            self.fine_tune_images = self.fine_tune_images[1:]
-            self.fine_tune_labels = self.fine_tune_labels[1:]
-
-        print('  fine_tune_images shape =', np.shape(self.fine_tune_images),
-              '-- fine_tune_labels shape =', np.shape(self.fine_tune_labels))
-        
-
-# Create a global FineTuningDataset object.
-# (TODO globals are usually a bad idea, reconsider this.)
-fine_tuning_dataset = FineTuningDataset()
+################################################################################
+# TODO 20220920 move class to own file FineTuningDataset.py
+#
+#    # # FineTuningDataset
+#
+#    # In[4]:
+#
+#
+#    class FineTuningDataset:
+#        """Manages the dataset of images and labels for fine-tuning."""
+#
+#        # Accumulated a new “training set” of the most recent N steps seen so far. (See
+#        # https://cwreynolds.github.io/TexSyn/#20220421 and ...#20220424 for discussion
+#        # of this parameter. Had been 1, then 100, then 200, then finally, infinity.)
+#        # max_training_set_size = float('inf') # keep ALL steps in training set, use GPU.
+#        max_training_set_size = 500 # Try smaller again, "yellow flowers" keeps failing.
+#        # List of "pixel tensors".
+#        fine_tune_images = []
+#        # List of xy3 [[x,y],[x,y],[x,y]] for 3 prey centers.
+#        fine_tune_labels = []
+#
+#        def update(self, pixel_tensor, prediction, step, directory):
+#            # Assume the predator was "aiming for" that one but missed by a bit.
+#            xy3 = read_3_centers_from_file(step, directory)
+#            sorted_xy3 = df.sort_xy3_by_proximity_to_point(xy3, prediction)
+#
+#            # Accumulate the most recent "max_training_set_size" training samples.
+#            self.fine_tune_images.append(pixel_tensor)
+#            self.fine_tune_labels.append(sorted_xy3)
+#
+#            # If training set has become too large, slice off first element of each.
+#            if len(self.fine_tune_images) > self.max_training_set_size:
+#                self.fine_tune_images = self.fine_tune_images[1:]
+#                self.fine_tune_labels = self.fine_tune_labels[1:]
+#
+#            print('  fine_tune_images shape =', np.shape(self.fine_tune_images),
+#                  '-- fine_tune_labels shape =', np.shape(self.fine_tune_labels))
+#
+#
+#    # Create a global FineTuningDataset object.
+#    # (TODO globals are usually a bad idea, reconsider this.)
+#    fine_tuning_dataset = FineTuningDataset()
+################################################################################
 
 
 ################################################################################
@@ -583,26 +612,30 @@ Predator.initialize_predator_population(20, read_default_pre_trained_model())
 print('population size:', len(Predator.population))
 
 
-# # Prototype rank tournament of Predators by min prediction-prey distance 
 
-# In[6]:
-
-
-# Given one predator's xy prediction, and three prey center positions, find the
-# "aim error": the distance from the predition to the nearest prey center.
-# TODO 20220913 maybe move this to inside Tournament class?
-# TODO Oh, it is used in Predator.record_predation_success()
-# TODO but maybe the binary "success" value should be passed into
-#      Predator.record_predation_success(), computed on the Tournament side?
-def aim_error(prediction_xy, prey_centers_xy3):
-    min_aim_error = math.inf
-    for xy in prey_centers_xy3:
-        distance = df.dist2d(xy, prediction_xy)
-        if min_aim_error > distance:
-            min_aim_error = distance
-    return min_aim_error
-
-#123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
+################################################################################
+# TODO 20220920 not sure where this should go, moving it to DiskFind for now.
+#
+#    # # Prototype rank tournament of Predators by min prediction-prey distance
+#
+#    # In[6]:
+#
+#
+#    # Given one predator's xy prediction, and three prey center positions, find the
+#    # "aim error": the distance from the predition to the nearest prey center.
+#    # TODO 20220913 maybe move this to inside Tournament class?
+#    # TODO Oh, it is used in Predator.record_predation_success()
+#    # TODO but maybe the binary "success" value should be passed into
+#    #      Predator.record_predation_success(), computed on the Tournament side?
+#    def aim_error(prediction_xy, prey_centers_xy3):
+#        min_aim_error = math.inf
+#        for xy in prey_centers_xy3:
+#            distance = df.dist2d(xy, prediction_xy)
+#            if min_aim_error > distance:
+#                min_aim_error = distance
+#        return min_aim_error
+#
+################################################################################
 
 
 # # Tournament class
@@ -620,7 +653,8 @@ class Tournament:
             self.tf_pixel_tensor = tf_pixel_tensor
             self.prey_centers_xy3 = prey_centers_xy3
             self.prediction = self.predator.model.predict(tf_pixel_tensor)[0]
-            self.aim_error = aim_error(self.prediction, self.prey_centers_xy3)
+#            self.aim_error = aim_error(self.prediction, self.prey_centers_xy3)
+            self.aim_error = df.aim_error(self.prediction, self.prey_centers_xy3)
 
     def __init__(self, pixel_tensor, prey_centers_xy3):
         # Store pixel data from current input image from TexSyn side.

@@ -695,3 +695,26 @@ def flatten_nested_list(nested_list):
     return [item for sublist in nested_list for item in sublist]
     
 ################################################################################
+
+
+################################################################################
+# TODO 20220920 not sure where this should go, moving it to DiskFind for now.
+
+# Prototype rank tournament of Predators by min prediction-prey distance.
+
+# Given one predator's xy prediction, and three prey center positions, find the
+# "aim error": the distance from the predition to the nearest prey center.
+# TODO 20220913 maybe move this to inside Tournament class?
+# TODO Oh, it is used in Predator.record_predation_success()
+# TODO but maybe the binary "success" value should be passed into
+#      Predator.record_predation_success(), computed on the Tournament side?
+def aim_error(prediction_xy, prey_centers_xy3):
+    min_aim_error = math.inf
+    for xy in prey_centers_xy3:
+#        distance = df.dist2d(xy, prediction_xy)
+        distance = dist2d(xy, prediction_xy)
+        if min_aim_error > distance:
+            min_aim_error = distance
+    return min_aim_error
+
+################################################################################
