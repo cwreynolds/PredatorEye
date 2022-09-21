@@ -86,7 +86,11 @@ else:
 import DiskFind as df
 
 from Predator import Predator
-from FineTuningDataset import FineTuningDataset
+################################################################################
+# TODO 20220921 re-refactor FineTuningDataset - why bother with a class?
+#from FineTuningDataset import FineTuningDataset
+import FineTuningDataset as ftd
+################################################################################
 
 
 # # Ad hoc “predator server”
@@ -163,17 +167,21 @@ def write_response_file(step, directory):
 #    best_prediction = tournament.ranked_predictions()[0]
 #    FineTuningDataset().update(pixel_tensor, best_prediction, step, directory)
 
+#        # Merge this step's image into fine-tuning dataset, and related bookkeeping.
+#        best_prediction = tournament.ranked_predictions()[0]
+#    #    FineTuningDataset().update(pixel_tensor,
+#    #                               best_prediction,
+#    #                               step,
+#    #                               directory)
+#        FineTuningDataset().update(pixel_tensor,
+#                                   best_prediction,
+#                                   prey_centers_xy3,
+#                                   step,
+#                                   directory)
+
     # Merge this step's image into fine-tuning dataset, and related bookkeeping.
     best_prediction = tournament.ranked_predictions()[0]
-#    FineTuningDataset().update(pixel_tensor,
-#                               best_prediction,
-#                               step,
-#                               directory)
-    FineTuningDataset().update(pixel_tensor,
-                               best_prediction,
-                               prey_centers_xy3,
-                               step,
-                               directory)
+    ftd.update(pixel_tensor, best_prediction, prey_centers_xy3, step, directory)
 
     ############################################################################
 

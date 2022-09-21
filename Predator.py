@@ -16,7 +16,11 @@ import random
 import numpy as np
 import DiskFind as df
 import tensorflow as tf
-from FineTuningDataset import FineTuningDataset
+################################################################################
+# TODO 20220921 re-refactor FineTuningDataset - why bother with a class?
+#from FineTuningDataset import FineTuningDataset
+import FineTuningDataset as ftd
+################################################################################
 
 class Predator:
     """Represents a Predator in the camouflage simulation. It has a CNN-based
@@ -81,15 +85,24 @@ class Predator:
         # Convert training data list to np arrays
 #        images_array = np.array(fine_tuning_dataset.fine_tune_images)
 #        labels_array = np.array([x[0] for x in fine_tuning_dataset.fine_tune_labels])
-        images_array = np.array(FineTuningDataset().fine_tune_images)
-        labels_array = np.array([x[0] for x in FineTuningDataset().fine_tune_labels])
+        ################################################################################
+        # TODO 20220921 re-refactor FineTuningDataset - why bother with a class?
+#        images_array = np.array(FineTuningDataset().fine_tune_images)
+#        labels_array = np.array([x[0] for x in FineTuningDataset().fine_tune_labels])
+        images_array = np.array(ftd.fine_tune_images)
+        labels_array = np.array([x[0] for x in ftd.fine_tune_labels])
+        ################################################################################
 
         # print('images_array.shape =', images_array.shape,
         #       '-- labels_array.shape =', labels_array.shape)
 
         # Skip fine-tuning until dataset is large enough (10% of max size).
 #        if images_array.shape[0] > (fine_tuning_dataset.max_training_set_size * 0.1):
-        if images_array.shape[0] > (FineTuningDataset().max_training_set_size * 0.1):
+        ################################################################################
+        # TODO 20220921 re-refactor FineTuningDataset - why bother with a class?
+#        if images_array.shape[0] > (FineTuningDataset().max_training_set_size * 0.1):
+        if images_array.shape[0] > (ftd.max_training_set_size * 0.1):
+        ################################################################################
             # TODO 20220823 -- run fine-tuning on CPU only.
             print('Running on CPU ONLY!')
             with tf.device('/cpu:0'):
