@@ -2,9 +2,9 @@
 # coding: utf-8
 ################################################################################
 #
-# Predator.py
+# Predator.py -- PredatorEye system
+#
 # Predator class
-# PredatorEye system
 #
 # 20220919 Split off from EvoCamoVsLearnPredPop.py (from ...ipynb)
 # Copyright © 2022 Craig Reynolds. All rights reserved.
@@ -61,6 +61,9 @@ class Predator:
     # label is actual (ground truth) center of disk nearest prediction. Keep a
     # max number of old steps to allow gradually forgetting the earliest part of
     # the run.
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20220922 update description above,
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     def fine_tune_model(self, pixel_tensor, prediction, prey_centers_xy3):
 
         # Assume the predator was "aiming for" that one but missed by a bit.
@@ -83,7 +86,7 @@ class Predator:
         # Skip fine-tuning until dataset is large enough (10% of max size).
         if images_array.shape[0] > (ftd.max_training_set_size * 0.1):
             # TODO 20220823 -- run fine-tuning on CPU only.
-            print('Running on CPU ONLY!')
+#            print('Running on CPU ONLY!')
             with tf.device('/cpu:0'):
                 # Do fine-tuning training step using data accumulated during run.
                 history = self.model.fit(x=images_array, y=labels_array)

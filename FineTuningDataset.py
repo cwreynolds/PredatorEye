@@ -2,10 +2,9 @@
 # coding: utf-8
 ################################################################################
 #
-# FineTuningDataset.py
-# FineTuningDataset class
+# FineTuningDataset.py -- PredatorEye system
+#
 # Manages the dataset of images and labels for fine-tuning Predator models.
-# PredatorEye system
 #
 # 20220920 Split off from EvoCamoVsLearnPredPop.py (from ...ipynb)
 # Copyright © 2022 Craig Reynolds. All rights reserved.

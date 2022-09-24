@@ -86,11 +86,17 @@ else:
 import DiskFind as df
 
 from Predator import Predator
-################################################################################
-# TODO 20220921 re-refactor FineTuningDataset - why bother with a class?
-#from FineTuningDataset import FineTuningDataset
 import FineTuningDataset as ftd
+
 ################################################################################
+# TODO 20220924 move these to Tournament.py
+from Tournament import Tournament
+################################################################################
+
+
+################################################################################
+# TODO 20220924 move these to PredatorServer.py
+
 
 
 # # Ad hoc “predator server”
@@ -277,27 +283,10 @@ def verify_comms_directory_reachable():
         time.sleep(1)  # wait 1 sec
         seconds += 1
 
+
 ################################################################################
-# TODO 20220919 moved these to DiskFind.py
-#
-#    # Given 3 prey positions ("xy3"), sort them by proximity to "point" (prediction)
-#    def sort_xy3_by_proximity_to_point(xy3, point):
-#        # print('xy3 =', xy3)
-#        xy3_plus_distance = [[df.dist2d(xy, point), xy] for xy in xy3]
-#        # print('xy3_plus_distance =', xy3_plus_distance)
-#        sorted_xy3_plus_key = sorted(xy3_plus_distance, key=lambda x: x[0])
-#        # print('sorted_xy3_plus_key =', sorted_xy3_plus_key)
-#        sorted_xy3 = [x[1] for x in sorted_xy3_plus_key]
-#        # print('sorted_xy3 =', sorted_xy3)
-#        return sorted_xy3
-#
-#    # Convert xy3 to string: [[x,y], [p,q], [r,s]] -> 'x y p q r s '
-#    def xy3_to_str(xy3):
-#        return ''.join('%s ' % i for i in flatten_nested_list(xy3))
-#
-#    def flatten_nested_list(nested_list):
-#        return [item for sublist in nested_list for item in sublist]
-################################################################################
+
+
 
 
 # # Read pre-trained model
@@ -360,74 +349,79 @@ Predator.initialize_predator_population(20, read_default_pre_trained_model())
 print('population size:', len(Predator.population))
 
 
-# # Tournament class
-
-# In[7]:
-
-
-class Tournament:
-    """Represents three Predators in a Tournament of the camouflage simulation."""
-    
-    class Member:
-        """One Predator in a Tournament of the camouflage simulation."""
-        def __init__(self, predator, tf_pixel_tensor, prey_centers_xy3):
-            self.predator = predator
-            self.tf_pixel_tensor = tf_pixel_tensor
-            self.prey_centers_xy3 = prey_centers_xy3
-            self.prediction = self.predator.model.predict(tf_pixel_tensor)[0]
-#            self.aim_error = aim_error(self.prediction, self.prey_centers_xy3)
-            self.aim_error = df.aim_error(self.prediction, self.prey_centers_xy3)
-
-    def __init__(self, pixel_tensor, prey_centers_xy3):
-        # Store pixel data from current input image from TexSyn side.
-        self.pixel_tensor = pixel_tensor
-        # Also store it as a TF-style tensor        
-        # TODO 20220907 should eventually replace the non-TF data.
-        #               now causes an error in Predator.fine_tune_model()
-        self.tf_pixel_tensor = tf.convert_to_tensor([self.pixel_tensor])
-        # Store the positions of all prey centers as xy on image.
-        self.prey_centers_xy3 = prey_centers_xy3
-        # Choose random tournament of three from population of Predators.
-        # Build a list with each wrapped in Tournament Member objects.
-        self.members = [self.Member(predator, self.tf_pixel_tensor, prey_centers_xy3)
-                        for predator in Predator.choose_for_tournament(3)]
-        # Rank members by aim_error (smallest first)
-        self.members = sorted(self.members, key=lambda m: m.aim_error)
-        # Sort predictions from the three Predators in a tournament, according to
-        # ”accuracy” (least aim error).
-        # TODO should this be computed on the fly in Tournament.ranked_predictions()?
-        self.ranked_predictions_xy3 = [member.prediction for member in self.members]
-
-    # Gets the list of 3 prey center predictions, ranked most accurate at front.
-    def ranked_predictions(self):
-        return self.ranked_predictions_xy3
-    
-    # Perform fine-tuning step on each Predator in this Tournament.
-    def fine_tune_models(self):        
-        for member in self.members:
-            member.predator.fine_tune_model(self.pixel_tensor,
-                                            member.prediction,
-                                            self.prey_centers_xy3)
-
-    # Called at Tournament end to update Predator population if needed.
-    def update_predator_population(self): 
-        worst_predator = self.members[-1].predator
-        if worst_predator.starvation():
-            global xxx_temp_starvation_count
-            xxx_temp_starvation_count += 1
-            print()
-            print('starving!!  ',
-                  xxx_temp_starvation_count, ', ',
-                  worst_predator.step / xxx_temp_starvation_count, ', ',
-                  xxx_temp_starvation_count / worst_predator.step)
-            # Replace worst predator in Tournament with offspring of other two.
-            worst_predator.replace_in_population(self.members[0].predator,
-                                                 self.members[1].predator)
-            print()
-
-
-# TODO 20220913 temp ad hoc counter
-xxx_temp_starvation_count = 0
+################################################################################
+# TODO 20220924 move these to Tournament.py
+#
+#    # # Tournament class
+#
+#    # In[7]:
+#
+#
+#    class Tournament:
+#        """Represents three Predators in a Tournament of the camouflage simulation."""
+#
+#        class Member:
+#            """One Predator in a Tournament of the camouflage simulation."""
+#            def __init__(self, predator, tf_pixel_tensor, prey_centers_xy3):
+#                self.predator = predator
+#                self.tf_pixel_tensor = tf_pixel_tensor
+#                self.prey_centers_xy3 = prey_centers_xy3
+#                self.prediction = self.predator.model.predict(tf_pixel_tensor)[0]
+#    #            self.aim_error = aim_error(self.prediction, self.prey_centers_xy3)
+#                self.aim_error = df.aim_error(self.prediction, self.prey_centers_xy3)
+#
+#        def __init__(self, pixel_tensor, prey_centers_xy3):
+#            # Store pixel data from current input image from TexSyn side.
+#            self.pixel_tensor = pixel_tensor
+#            # Also store it as a TF-style tensor
+#            # TODO 20220907 should eventually replace the non-TF data.
+#            #               now causes an error in Predator.fine_tune_model()
+#            self.tf_pixel_tensor = tf.convert_to_tensor([self.pixel_tensor])
+#            # Store the positions of all prey centers as xy on image.
+#            self.prey_centers_xy3 = prey_centers_xy3
+#            # Choose random tournament of three from population of Predators.
+#            # Build a list with each wrapped in Tournament Member objects.
+#            self.members = [self.Member(predator, self.tf_pixel_tensor, prey_centers_xy3)
+#                            for predator in Predator.choose_for_tournament(3)]
+#            # Rank members by aim_error (smallest first)
+#            self.members = sorted(self.members, key=lambda m: m.aim_error)
+#            # Sort predictions from the three Predators in a tournament, according to
+#            # ”accuracy” (least aim error).
+#            # TODO should this be computed on the fly in Tournament.ranked_predictions()?
+#            self.ranked_predictions_xy3 = [member.prediction for member in self.members]
+#
+#        # Gets the list of 3 prey center predictions, ranked most accurate at front.
+#        def ranked_predictions(self):
+#            return self.ranked_predictions_xy3
+#
+#        # Perform fine-tuning step on each Predator in this Tournament.
+#        def fine_tune_models(self):
+#            for member in self.members:
+#                member.predator.fine_tune_model(self.pixel_tensor,
+#                                                member.prediction,
+#                                                self.prey_centers_xy3)
+#
+#        # Called at Tournament end to update Predator population if needed.
+#        def update_predator_population(self):
+#            worst_predator = self.members[-1].predator
+#            if worst_predator.starvation():
+#                global xxx_temp_starvation_count
+#                xxx_temp_starvation_count += 1
+#                print()
+#                print('starving!!  ',
+#                      xxx_temp_starvation_count, ', ',
+#                      worst_predator.step / xxx_temp_starvation_count, ', ',
+#                      xxx_temp_starvation_count / worst_predator.step)
+#                # Replace worst predator in Tournament with offspring of other two.
+#                worst_predator.replace_in_population(self.members[0].predator,
+#                                                     self.members[1].predator)
+#                print()
+#
+#
+#    # TODO 20220913 temp ad hoc counter
+#    xxx_temp_starvation_count = 0
+#
+################################################################################
 
 
 # # Run test
