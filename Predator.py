@@ -168,15 +168,32 @@ class Predator:
             if count < self.success_history_min_meals:
                 starving = True
         return starving
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20220928 try using pre-trained model for Predator offspring
     
+#    # When a Predator starves, replace it with an "offspring" of two others.
+#    # TODO currently: randomly choose one parent's model, copy, and jiggle.
+#    def replace_in_population(self, parent_a, parent_b):
+#        parent = random.choice([parent_a, parent_b])
+#        self.copy_model_of_another_predator(parent)
+#        self.jiggle_model()
+#        self.successes = []
+#        print('reinitializing predator', id(self))
+        
     # When a Predator starves, replace it with an "offspring" of two others.
     # TODO currently: randomly choose one parent's model, copy, and jiggle.
     def replace_in_population(self, parent_a, parent_b):
-        parent = random.choice([parent_a, parent_b])
-        self.copy_model_of_another_predator(parent)
+
+#        parent = random.choice([parent_a, parent_b])
+#        self.copy_model_of_another_predator(parent)
+        self.copy_model(Predator.default_pre_trained_model)
+
         self.jiggle_model()
         self.successes = []
         print('reinitializing predator', id(self))
+        
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Utility based on https://stackoverflow.com/a/64542651/1991373
 # TODO 20220907 added this to avoid always getting the same random_weights
