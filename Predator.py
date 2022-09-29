@@ -181,18 +181,32 @@ class Predator:
 #        self.successes = []
 #        print('reinitializing predator', id(self))
         
+#        # When a Predator starves, replace it with an "offspring" of two others.
+#        # TODO currently: randomly choose one parent's model, copy, and jiggle.
+#        def replace_in_population(self, parent_a, parent_b):
+#
+#    #        parent = random.choice([parent_a, parent_b])
+#    #        self.copy_model_of_another_predator(parent)
+#            self.copy_model(Predator.default_pre_trained_model)
+#
+#            self.jiggle_model()
+#            self.successes = []
+#            print('reinitializing predator', id(self))
+
     # When a Predator starves, replace it with an "offspring" of two others.
-    # TODO currently: randomly choose one parent's model, copy, and jiggle.
+    # TODO currently, random choice between:
+    #      1: randomly choose one parent's model, copy, and jiggle.
+    #      2: copy default_pre_trained_model and jiggle.
     def replace_in_population(self, parent_a, parent_b):
-
-#        parent = random.choice([parent_a, parent_b])
-#        self.copy_model_of_another_predator(parent)
-        self.copy_model(Predator.default_pre_trained_model)
-
+        if random.choice([True, False]):
+            parent = random.choice([parent_a, parent_b])
+            self.copy_model_of_another_predator(parent)
+        else:
+            self.copy_model(Predator.default_pre_trained_model)
         self.jiggle_model()
         self.successes = []
         print('reinitializing predator', id(self))
-        
+
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Utility based on https://stackoverflow.com/a/64542651/1991373
