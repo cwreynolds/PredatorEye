@@ -28,6 +28,12 @@ class Predator:
     # Cache the standard default_pre_trained_model (as a class variable).
     default_pre_trained_model = None
     
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20221001 try using half the jiggle in replace_in_population()
+    # Class parameter: default strength of noise used to jiggle CNN models.
+    jiggle_strength = 0.003
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    
     # How much recent predation success data is kept,
     # and how much of it must be non-zero to avoid starvation.
     success_history_max_length = 20
@@ -113,9 +119,24 @@ class Predator:
         # Copy weights of other model.
         self.model.set_weights(other_model.get_weights())
 
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20221001 try using half the jiggle in replace_in_population()
+    
+#    # Modify this Predator's model by adding signed noise to its weights.
+#    def jiggle_model(self, strength = 0.003):
+#        weight_perturbation(self.model, tf.constant(strength))
+
+#    # Modify this Predator's model by adding signed noise to its weights.
+#    def jiggle_model(self, strength = Predator.jiggle_strength):
+#        weight_perturbation(self.model, tf.constant(strength))
+    
     # Modify this Predator's model by adding signed noise to its weights.
-    def jiggle_model(self, strength = 0.003):
+    def jiggle_model(self, strength = None):
+        if strength == None:
+            strength = Predator.jiggle_strength
         weight_perturbation(self.model, tf.constant(strength))
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Print the "middle" weight of each layer of this Predator's Keras model.
     def print_model_trace(self):
@@ -193,6 +214,25 @@ class Predator:
 #            self.successes = []
 #            print('reinitializing predator', id(self))
 
+#    # When a Predator starves, replace it with an "offspring" of two others.
+#    # TODO currently, random choice between:
+#    #      1: randomly choose one parent's model, copy, and jiggle.
+#    #      2: copy default_pre_trained_model and jiggle.
+#    def replace_in_population(self, parent_a, parent_b):
+#        if random.choice([True, False]):
+#            parent = random.choice([parent_a, parent_b])
+#            self.copy_model_of_another_predator(parent)
+#        else:
+#            self.copy_model(Predator.default_pre_trained_model)
+#        self.jiggle_model()
+#        self.successes = []
+#        print('reinitializing predator', id(self))
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20221001 try using half the jiggle in replace_in_population()
+            
     # When a Predator starves, replace it with an "offspring" of two others.
     # TODO currently, random choice between:
     #      1: randomly choose one parent's model, copy, and jiggle.
@@ -203,7 +243,8 @@ class Predator:
             self.copy_model_of_another_predator(parent)
         else:
             self.copy_model(Predator.default_pre_trained_model)
-        self.jiggle_model()
+#        self.jiggle_model()
+        self.jiggle_model(0.5 * Predator.jiggle_strength)
         self.successes = []
         print('reinitializing predator', id(self))
 
