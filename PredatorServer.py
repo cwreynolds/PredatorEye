@@ -57,13 +57,71 @@ def perform_step(step, directory):
     write_response_file(step, shared_directory)
     delete_find_file(step - 1, shared_directory)
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# TODO 20221005 patiently_read_pixel_tensor()
+
+# instead of this:
+
+#    # TODO 20221002 I had 2 malformed image files this morning:
+#    # PIL.UnidentifiedImageError: cannot identify image file '/Users/cwr/camo_data/comms/camo_46.png'
+#    # clumsy work around:
+#    time.sleep(0.5)
+
+# try this:
+# (or reliably_read_pixel_tensor() ?)
+
+## Read image file, loop if not expected format. (That is: assume sync delay.)
+#def patiently_read_pixel_tensor(step, directory):
+#    pixel_tensor = None
+#    image_pathname = make_camo_pathname(step, directory)
+#    while True:
+#        pixel_tensor = df.read_image_file_as_pixel_tensor(image_pathname)
+#        if df.check_pixel_tensor(pixel_tensor):
+#            break
+#        print('Reread: bad format for', image_pathname)
+#        time.sleep(0.1)
+#    return pixel_tensor
+
+# Read image file, loop if not expected format. (That is: assume sync delay.)
+def patiently_read_pixel_tensor(step, directory):
+    pixel_tensor = None
+    image_pathname = make_camo_pathname(step, directory)
+    while True:
+#        pixel_tensor = df.read_image_file_as_pixel_tensor(image_pathname)
+        
+        image_read_ok = True
+        try:
+            pixel_tensor = df.read_image_file_as_pixel_tensor(image_pathname)
+        except:
+            image_read_ok = False
+
+#        if df.check_pixel_tensor(pixel_tensor):
+        if image_read_ok and df.check_pixel_tensor(pixel_tensor):
+            break
+        print('Reread: bad format for', image_pathname)
+        time.sleep(0.1)
+    return pixel_tensor
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 # Read image file for step, apply pre-trained model, write response file.
 def write_response_file(step, directory):
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20221005 patiently_read_pixel_tensor()
+
+#    # Read image file and check for expected format.
+#    image_pathname = make_camo_pathname(step, directory)
+#    pixel_tensor = df.read_image_file_as_pixel_tensor(image_pathname)
+#    assert df.check_pixel_tensor(pixel_tensor), ('wrong file format: ' +
+#                                                 image_pathname)
+
     # Read image file and check for expected format.
-    image_pathname = make_camo_pathname(step, directory)
-    pixel_tensor = df.read_image_file_as_pixel_tensor(image_pathname)
-    assert df.check_pixel_tensor(pixel_tensor), ('wrong file format: ' +
-                                                 image_pathname)
+    pixel_tensor = patiently_read_pixel_tensor(step, directory)
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    
+    
     # TODO 20220907 can/should this TF version replace pixel_tensor below?
     #               no this causes an error in Predator.fine_tune_model()
     tf_pixel_tensor = tf.convert_to_tensor([pixel_tensor])
@@ -151,6 +209,15 @@ def wait_for_reply(step, directory):
         if (test_count % 100) == 0:
             write_ping_file(test_count, step, directory)
     print(' done, elapsed time:', int(time.time() - start_time), 'seconds.')
+    
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20221005 patiently_read_pixel_tensor()
+
+#    # TODO 20221002 I had 2 malformed image files this morning:
+#    # PIL.UnidentifiedImageError: cannot identify image file '/Users/cwr/camo_data/comms/camo_46.png'
+#    # clumsy work around:
+#    time.sleep(0.5)
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Like fs::exists()
 def is_file_present(file):
