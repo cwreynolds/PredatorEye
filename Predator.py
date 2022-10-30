@@ -41,7 +41,10 @@ class Predator:
     # TODO 20220922 lower starvation threshold, must miss more meals: .33 to .2
 #    success_history_min_meals = success_history_max_length * 0.33
 #    success_history_min_meals = success_history_max_length * 0.2
-    success_history_ratio = 0.2
+#    success_history_ratio = 0.2
+    # TODO 20221030 -- have been seeing too many mediocre predators surviving
+    # for too long. Increase starvation threshold (more severe) from 0.2 to 0.35.
+    success_history_ratio = 0.35
     success_history_min_meals = success_history_max_length*success_history_ratio
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
