@@ -29,6 +29,20 @@ keras_backend.set_image_data_format('channels_last')
 # Set absolute local pathname of shared "comms" directory (for Craig's laptop).
 ps.shared_directory = '/Users/cwr/camo_data/comms/'
 
+## Read pre-trained "find conspicuous disk" model as Keras/TensorFlow neural net.
+#def read_default_pre_trained_model():
+#    # Project directory on Google Drive, mounted on local file system.
+#    g_drive_pe_dir = ('/Users/cwr/Library/CloudStorage/' +
+#                      'GoogleDrive-craig.w.reynolds@gmail.com/' +
+#                      'My Drive/PredatorEye/')
+#    # Directory of pre-trained Keras/TensorFlow models.
+#    saved_model_directory = g_drive_pe_dir + 'saved_models/'
+#    # Pathname of pre-trained Keras/TensorFlow model
+#    trained_model = saved_model_directory + '20220321_1711_FCD6_rc4'
+#    print('Reading pre-trained model from:', trained_model)
+#    return keras.models.load_model(trained_model,
+#                                   custom_objects={ 'in_disk': df.in_disk })
+
 # Read pre-trained "find conspicuous disk" model as Keras/TensorFlow neural net.
 def read_default_pre_trained_model():
     # Project directory on Google Drive, mounted on local file system.
@@ -38,10 +52,12 @@ def read_default_pre_trained_model():
     # Directory of pre-trained Keras/TensorFlow models.
     saved_model_directory = g_drive_pe_dir + 'saved_models/'
     # Pathname of pre-trained Keras/TensorFlow model
-    trained_model = saved_model_directory + '20220321_1711_FCD6_rc4'
-    print('Reading pre-trained model from:', trained_model)
-    return keras.models.load_model(trained_model,
-                                   custom_objects={ 'in_disk': df.in_disk })
+    trained_model_path = saved_model_directory + '20220321_1711_FCD6_rc4'
+    print('Reading pre-trained model from:', trained_model_path)
+    model = keras.models.load_model(trained_model_path,
+                                    custom_objects={ 'in_disk': df.in_disk })
+    model.summary()
+    return model
 
 # Create population of Predators.
 Predator.initialize_predator_population(20, read_default_pre_trained_model())
