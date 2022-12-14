@@ -44,7 +44,9 @@ class Predator:
 #    success_history_ratio = 0.2
     # TODO 20221030 -- have been seeing too many mediocre predators surviving
     # for too long. Increase starvation threshold (more severe) from 0.2 to 0.35.
-    success_history_ratio = 0.35
+#    success_history_ratio = 0.35
+    # TODO 20221210 experiment to make this even more severe 0.35 to 0.5
+    success_history_ratio = 0.5
     success_history_min_meals = success_history_max_length*success_history_ratio
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
