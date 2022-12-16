@@ -11,6 +11,7 @@
 #
 ################################################################################
 
+import statistics
 import DiskFind as df
 import tensorflow as tf
 from Predator import Predator
@@ -72,6 +73,16 @@ class Tournament:
             # Replace worst predator in Tournament with offspring of other two.
             worst_predator.replace_in_population(self.members[0].predator,
                                                  self.members[1].predator)
+            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+            # TODO 20221214 age tracking
+            ages = []
+            for p in Predator.population:
+                ages.append(p.age())
+            print('average age:', statistics.mean(ages))
+            print('ages:', end = " ")
+            for a in ages:
+                print(a, end = " ")
+            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
             print()
 
 

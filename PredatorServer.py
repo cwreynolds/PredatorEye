@@ -99,10 +99,14 @@ def write_response_file(step, directory):
     ftd.update(pixel_tensor, best_prediction, prey_centers_xy3, step, directory)
 
     # Update the Predator population in case of starvation.
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20221214 move this up one line for age tracking
+    Predator.step = step  # TODO 20220911 Goofy hack.
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     tournament.update_predator_population()
 
     # Fine-tune models of each Predator in Tournament.
-    Predator.step = step  # TODO 20220911 Goofy hack.
+#    Predator.step = step  # TODO 20220911 Goofy hack.
     tournament.fine_tune_models()
 
 # Delete the given file, presumably after having written the next one.

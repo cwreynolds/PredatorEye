@@ -46,7 +46,11 @@ class Predator:
     # for too long. Increase starvation threshold (more severe) from 0.2 to 0.35.
 #    success_history_ratio = 0.35
     # TODO 20221210 experiment to make this even more severe 0.35 to 0.5
-    success_history_ratio = 0.5
+#    success_history_ratio = 0.5
+    # TODO 20221214
+#    success_history_ratio = 0.42
+    # TODO 20221215
+    success_history_ratio = 0.4
     success_history_min_meals = success_history_max_length*success_history_ratio
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -66,6 +70,17 @@ class Predator:
         Predator.population.append(self)
         # Keep history of predation events: was hunt a success or a failure?
         self.successes = []
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20221214 is self.step going to be a valid here?
+        self.birthday = self.step
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20221214
+    # number of steps since this Predator was created
+    def age(self):
+        return self.step - self.birthday
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Apply fine-tuning to (originally pre-trained) predator model. Use recent
     # steps as  training set. Assume they were "near misses" and so training
@@ -251,6 +266,10 @@ class Predator:
 #        self.jiggle_model()
         self.jiggle_model(0.5 * Predator.jiggle_strength)
         self.successes = []
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20221214 is self.step going to be a valid here?
+        self.birthday = self.step
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         print('reinitializing predator', id(self))
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
