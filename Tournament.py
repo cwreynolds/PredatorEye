@@ -66,19 +66,22 @@ class Tournament:
             global xxx_temp_starvation_count
             xxx_temp_starvation_count += 1
             print()
-            print('starving!!  ',
-                  xxx_temp_starvation_count, ', ',
+            print('starving!! ', xxx_temp_starvation_count, ', ',
                   worst_predator.step / xxx_temp_starvation_count, ', ',
-                  xxx_temp_starvation_count / worst_predator.step)
+                  "%.3f" % (xxx_temp_starvation_count / worst_predator.step),
+                  sep='')
             # Replace worst predator in Tournament with offspring of other two.
             worst_predator.replace_in_population(self.members[0].predator,
                                                  self.members[1].predator)
             # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
             # TODO 20221214 age tracking
+            # TODO 20221216 print min and max in addition to mean.
             ages = []
             for p in Predator.population:
                 ages.append(p.age())
-            print('average age:', statistics.mean(ages))
+#            print('average age:', statistics.mean(ages))
+            print('age (min mean max):',
+                  min(ages), statistics.mean(ages), max(ages))
             print('ages:', end = " ")
             for a in ages:
                 print(a, end = " ")
