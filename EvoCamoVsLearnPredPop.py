@@ -60,7 +60,11 @@ def read_default_pre_trained_model():
     return model
 
 # Create population of Predators.
-Predator.initialize_predator_population(20, read_default_pre_trained_model())
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+# TODO 20221231 try “twice as big” run
+#Predator.initialize_predator_population(20, read_default_pre_trained_model())
+Predator.initialize_predator_population(40, read_default_pre_trained_model())
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 print('population size:', len(Predator.population))
 
 # RUN SIMULATION

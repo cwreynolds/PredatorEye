@@ -116,11 +116,14 @@ class Predator:
             with tf.device('/cpu:0'):
                 # Do fine-tuning training step using data accumulated during run.
                 history = self.model.fit(x=images_array, y=labels_array)
-            ####################################################################
-            # TODO 20220921 turn off temporarily. Redesign. PredatorServer module?
             # Keep log of in_disk metric:
-#            write_in_disk_log(self.step, history)
-            ####################################################################
+            # write_in_disk_log(self.step, history)
+            
+            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+            # TODO 20230105 wip, record in_disk value from this fine-tune
+            # For logging: record in_disk value from this fine-tune
+            self.previous_in_disk = history.history['in_disk'][-1]
+            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         
         # Keep recent win/loss record for this predator for starvation pruning.
         self.record_predation_success(prediction, prey_centers_xy3)
