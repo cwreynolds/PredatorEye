@@ -76,6 +76,7 @@ class Predator:
         self.birthday = self.step
         self.name = 'predator_' + str(Predator.instance_counter)
         Predator.instance_counter += 1
+        self.previous_in_disk = 0
 
     # number of steps since this Predator was created
     def age(self):
