@@ -25,7 +25,8 @@ class Tournament:
             self.predator = predator
             self.tf_pixel_tensor = tf_pixel_tensor
             self.prey_centers_xy3 = prey_centers_xy3
-            self.prediction = self.predator.model.predict(tf_pixel_tensor)[0]
+            spm = self.predator.model
+            self.prediction = spm.predict(tf_pixel_tensor, verbose=0)[0]
             self.aim_error = df.aim_error(self.prediction, self.prey_centers_xy3)
 
     def __init__(self, pixel_tensor, prey_centers_xy3):
@@ -54,93 +55,13 @@ class Tournament:
     
     # Perform fine-tuning step on each Predator in this Tournament.
     def fine_tune_models(self):
+        report = True
         for member in self.members:
             member.predator.fine_tune_model(self.pixel_tensor,
                                             member.prediction,
-                                            self.prey_centers_xy3)
-
-## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-# TODO 20221230 more tweaks for predator starvation logging.
-
-#        # Called at Tournament end to update Predator population if needed.
-#        def update_predator_population(self):
-#            worst_predator = self.members[-1].predator
-#            if worst_predator.starvation():
-#                global xxx_temp_starvation_count
-#                xxx_temp_starvation_count += 1
-#                print()
-#                print('starving!! ', xxx_temp_starvation_count, ', ',
-#                      worst_predator.step / xxx_temp_starvation_count, ', ',
-#                      "%.3f" % (xxx_temp_starvation_count / worst_predator.step),
-#                      sep='')
-#                # Replace worst predator in Tournament with offspring of other two.
-#                worst_predator.replace_in_population(self.members[0].predator,
-#                                                     self.members[1].predator)
-#                # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#                # TODO 20221214 age tracking
-#                # TODO 20221216 print min and max in addition to mean.
-#                ages = []
-#                for p in Predator.population:
-#                    ages.append(p.age())
-#    #            print('average age:', statistics.mean(ages))
-#                print('age (min mean max):',
-#                      min(ages), statistics.mean(ages), max(ages))
-#                print('ages:', end = " ")
-#                for a in ages:
-#                    print(a, end = " ")
-#                # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#                print()
-
-#        # Called at Tournament end to update Predator population if needed.
-#        def update_predator_population(self):
-#            worst_predator = self.members[-1].predator
-#            if worst_predator.starvation():
-#                global xxx_temp_starvation_count
-#                xxx_temp_starvation_count += 1
-#                print()
-#                print('starving!! ', xxx_temp_starvation_count, ', ',
-#                      worst_predator.step / xxx_temp_starvation_count, ', ',
-#                      "%.3f" % (xxx_temp_starvation_count / worst_predator.step),
-#                      sep='')
-#    #            # Replace worst predator in Tournament with offspring of other two.
-#    #            worst_predator.replace_in_population(self.members[0].predator,
-#    #                                                 self.members[1].predator)
-#
-#                # TODO 20221230 new experiment, how
-#                sorted_pop = sorted(Predator.population, key=(lambda x: x.age()))
-#
-#
-#                ages = []
-#    #            for p in Predator.population:
-#                for p in sorted_pop:
-#                    ages.append(p.age())
-#
-#    #            ages.sort()
-#
-#    #            print('age (min mean max):',
-#    #                  min(ages), statistics.mean(ages), max(ages))
-#
-#                print('age (min mean max):', ages[0], statistics.mean(ages), ages[-1])
-#
-#                print('ages:', end = " ")
-#                for a in ages:
-#                    print(a, end = " ")
-#                print()
-#    #            print()
-#
-#                # TODO 20221230 new experiment, how
-#                print('Hunt success (in same age order):')
-#                print('', end = "    ")
-#                for p in sorted_pop:
-#                    s = int(100 * sum(p.successes) / p.success_history_max_length)
-#                    print(s, end = "% ")
-#                print()
-#
-#                print()
-#
-#                # Replace worst predator in Tournament with offspring of other two.
-#                worst_predator.replace_in_population(self.members[0].predator,
-#                                                     self.members[1].predator)
+                                            self.prey_centers_xy3,
+                                            report)
+            report = False
 
     # Called at Tournament end to update Predator population if needed.
     def update_predator_population(self):
@@ -183,8 +104,6 @@ class Tournament:
             # Replace worst predator in Tournament with offspring of other two.
             worst_predator.replace_in_population(self.members[0].predator,
                                                  self.members[1].predator)
-
-## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
 # TODO 20220913 temp ad hoc counter
 xxx_temp_starvation_count = 0

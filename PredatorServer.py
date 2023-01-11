@@ -47,12 +47,7 @@ def restart_run():
 
 # Single step: wait for camo file, write response, delete previous response.
 def perform_step(step, directory):
-    ############################################################################
-    # TODO 20220909 add verbose "start of step" logging -- getting hard to read.
-    print()
-    print('step', step)
-    print()
-    ############################################################################
+    print('\nstep', step)
     wait_for_reply(step, shared_directory)
     write_response_file(step, shared_directory)
     delete_find_file(step - 1, shared_directory)

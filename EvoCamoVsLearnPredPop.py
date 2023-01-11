@@ -14,6 +14,7 @@
 # Copyright © 2022 Craig Reynolds. All rights reserved.
 ################################################################################
 
+import argparse
 import DiskFind as df
 import tensorflow as tf
 import PredatorServer as ps
@@ -28,20 +29,6 @@ keras_backend.set_image_data_format('channels_last')
 
 # Set absolute local pathname of shared "comms" directory (for Craig's laptop).
 ps.shared_directory = '/Users/cwr/camo_data/comms/'
-
-## Read pre-trained "find conspicuous disk" model as Keras/TensorFlow neural net.
-#def read_default_pre_trained_model():
-#    # Project directory on Google Drive, mounted on local file system.
-#    g_drive_pe_dir = ('/Users/cwr/Library/CloudStorage/' +
-#                      'GoogleDrive-craig.w.reynolds@gmail.com/' +
-#                      'My Drive/PredatorEye/')
-#    # Directory of pre-trained Keras/TensorFlow models.
-#    saved_model_directory = g_drive_pe_dir + 'saved_models/'
-#    # Pathname of pre-trained Keras/TensorFlow model
-#    trained_model = saved_model_directory + '20220321_1711_FCD6_rc4'
-#    print('Reading pre-trained model from:', trained_model)
-#    return keras.models.load_model(trained_model,
-#                                   custom_objects={ 'in_disk': df.in_disk })
 
 # Read pre-trained "find conspicuous disk" model as Keras/TensorFlow neural net.
 def read_default_pre_trained_model():
@@ -59,21 +46,28 @@ def read_default_pre_trained_model():
     model.summary()
     return model
 
-# Create population of Predators.
-## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-# TODO 20221231 try “twice as big” run
-#Predator.initialize_predator_population(20, read_default_pre_trained_model())
-Predator.initialize_predator_population(40, read_default_pre_trained_model())
-## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-print('population size:', len(Predator.population))
+# Create population of p Predators. Population is 20 or uses first cmd line arg.
+def setup_population():
+    p = 20
+    parser = argparse.ArgumentParser(description='Launch Predator server.')
+    parser.add_argument('population', type=int,
+                        default=p, const=p, nargs='?', help='Predator count.')
+    args = parser.parse_args()
+    p = args.population
+    print('Creating population of', p, 'predators:')
+    Predator.initialize_predator_population(p, read_default_pre_trained_model())
+    print('population size:', len(Predator.population))
 
 # RUN SIMULATION
 #
-# Keep track of how often selected prey is nearest center:
-Predator.nearest_center = 0
-#
 # Flush out any left-over files from previous run in comms directory.
 ps.clean_up_communication_directory()
+#
+# Make population of Predators
+setup_population()
+#
+# Keep track of how often selected prey is nearest center:
+Predator.nearest_center = 0
 #
 # Start fresh run.
 ps.start_run()

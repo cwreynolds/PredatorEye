@@ -61,6 +61,9 @@ class Predator:
     # to Predator.fine_tune_model() via Tournament.fine_tune_models() for the
     # sole purpose of logging for "nearest_center" which really needs redesign.
     step = 0
+    
+    # Only used for generating unique name.
+    instance_counter = 0
 
     # Instance constructor.
     def __init__(self):
@@ -70,42 +73,24 @@ class Predator:
         Predator.population.append(self)
         # Keep history of predation events: was hunt a success or a failure?
         self.successes = []
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20221214 is self.step going to be a valid here?
         self.birthday = self.step
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        self.name = 'predator_' + str(Predator.instance_counter)
+        Predator.instance_counter += 1
 
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20221214
     # number of steps since this Predator was created
     def age(self):
         return self.step - self.birthday
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Apply fine-tuning to (originally pre-trained) predator model. Use recent
     # steps as  training set. Assume they were "near misses" and so training
-    # label is actual (ground truth) center of disk nearest prediction. Keep a
-    # max number of old steps to allow gradually forgetting the earliest part of
-    # the run.
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20220922 update description above,
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    def fine_tune_model(self, pixel_tensor, prediction, prey_centers_xy3):
-
-        # Assume the predator was "aiming for" that one but missed by a bit.
-        sorted_xy3 = df.sort_xy3_by_proximity_to_point(prey_centers_xy3, prediction)
-
-        # TODO temp: keep track of how often selected prey is nearest center:
-        temp = prey_centers_xy3.copy()  # needed? (much later 20220911, no I don't think so)
-        sorted_by_dist_to_center = df.sort_xy3_by_proximity_to_point(temp, [0.5, 0.5])
-        if sorted_by_dist_to_center[0] == sorted_xy3[0]:
-            Predator.nearest_center += 1
-        nc = self.nearest_center / 3  # ad hoc adjustment to ad hoc metric
-        print('  nearest_center:',
-              str(int(100 * float(nc) / (self.step + 1))) + '%',
-              '(nearest_center =', nc, ', steps =', self.step + 1, ')')
+    # label is actual (ground truth) center of disk nearest prediction.
+    def fine_tune_model(self, pixel_tensor, prediction, prey_centers_xy3, report):
+        self.log_center_preference(prediction, prey_centers_xy3, report)
 
         # Convert training data list to np arrays
+        # (TODO 20230107 I think these are identical for all three Predators in
+        #    a Tournament. Could be precomputed in Tournament.fine_tune_models()
+        #    and passed in here.)
         images_array = np.array(ftd.fine_tune_images)
         labels_array = np.array([x[0] for x in ftd.fine_tune_labels])
 
@@ -115,18 +100,33 @@ class Predator:
 #            print('Running on CPU ONLY!')
             with tf.device('/cpu:0'):
                 # Do fine-tuning training step using data accumulated during run.
-                history = self.model.fit(x=images_array, y=labels_array)
-            # Keep log of in_disk metric:
-            # write_in_disk_log(self.step, history)
-            
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-            # TODO 20230105 wip, record in_disk value from this fine-tune
+                history = self.model.fit(x=images_array, y=labels_array, verbose=0)
             # For logging: record in_disk value from this fine-tune
             self.previous_in_disk = history.history['in_disk'][-1]
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+            h = '  ' + self.name + ', in_disk:'
+            print(h, '{:0.2f}'.format(self.previous_in_disk))
         
         # Keep recent win/loss record for this predator for starvation pruning.
         self.record_predation_success(prediction, prey_centers_xy3)
+
+    def log_center_preference(self, prediction, prey_centers_xy3, report):
+        # Assume the predator was "aiming for" that one but missed by a bit.
+        sorted_xy3 = df.sort_xy3_by_proximity_to_point(prey_centers_xy3, prediction)
+
+        # TODO temp: keep track of how often selected prey is nearest center:
+        # TODO 20230109 needed?
+        #      (much later 20220911, no I don't think so)
+        #      (even later 20230109, corresponds to sort() vs. sorted())
+        temp = prey_centers_xy3.copy()
+        sorted_by_dist_to_center = df.sort_xy3_by_proximity_to_point(temp, [0.5, 0.5])
+        if sorted_by_dist_to_center[0] == sorted_xy3[0]:
+            Predator.nearest_center += 1
+        if report:
+            nc = self.nearest_center / 3  # ad hoc adjustment to ad hoc metric
+            print('  nearest_center:',
+                  str(int(100 * float(nc) / (self.step + 1))) + '%',
+                  '(nearest_center =', str(int(nc)) + ',',
+                  'steps =', str(self.step + 1) + ')')
 
     # Copy the neural net model of a given predator into this one.
     def copy_model_of_another_predator(self, another_predator):
@@ -142,24 +142,11 @@ class Predator:
         # Copy weights of other model.
         self.model.set_weights(other_model.get_weights())
 
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20221001 try using half the jiggle in replace_in_population()
-    
-#    # Modify this Predator's model by adding signed noise to its weights.
-#    def jiggle_model(self, strength = 0.003):
-#        weight_perturbation(self.model, tf.constant(strength))
-
-#    # Modify this Predator's model by adding signed noise to its weights.
-#    def jiggle_model(self, strength = Predator.jiggle_strength):
-#        weight_perturbation(self.model, tf.constant(strength))
-    
     # Modify this Predator's model by adding signed noise to its weights.
     def jiggle_model(self, strength = None):
         if strength == None:
             strength = Predator.jiggle_strength
         weight_perturbation(self.model, tf.constant(strength))
-
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Print the "middle" weight of each layer of this Predator's Keras model.
     def print_model_trace(self):
@@ -212,50 +199,7 @@ class Predator:
             if count < self.success_history_min_meals:
                 starving = True
         return starving
-
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20220928 try using pre-trained model for Predator offspring
     
-#    # When a Predator starves, replace it with an "offspring" of two others.
-#    # TODO currently: randomly choose one parent's model, copy, and jiggle.
-#    def replace_in_population(self, parent_a, parent_b):
-#        parent = random.choice([parent_a, parent_b])
-#        self.copy_model_of_another_predator(parent)
-#        self.jiggle_model()
-#        self.successes = []
-#        print('reinitializing predator', id(self))
-        
-#        # When a Predator starves, replace it with an "offspring" of two others.
-#        # TODO currently: randomly choose one parent's model, copy, and jiggle.
-#        def replace_in_population(self, parent_a, parent_b):
-#
-#    #        parent = random.choice([parent_a, parent_b])
-#    #        self.copy_model_of_another_predator(parent)
-#            self.copy_model(Predator.default_pre_trained_model)
-#
-#            self.jiggle_model()
-#            self.successes = []
-#            print('reinitializing predator', id(self))
-
-#    # When a Predator starves, replace it with an "offspring" of two others.
-#    # TODO currently, random choice between:
-#    #      1: randomly choose one parent's model, copy, and jiggle.
-#    #      2: copy default_pre_trained_model and jiggle.
-#    def replace_in_population(self, parent_a, parent_b):
-#        if random.choice([True, False]):
-#            parent = random.choice([parent_a, parent_b])
-#            self.copy_model_of_another_predator(parent)
-#        else:
-#            self.copy_model(Predator.default_pre_trained_model)
-#        self.jiggle_model()
-#        self.successes = []
-#        print('reinitializing predator', id(self))
-
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20221001 try using half the jiggle in replace_in_population()
-            
     # When a Predator starves, replace it with an "offspring" of two others.
     # TODO currently, random choice between:
     #      1: randomly choose one parent's model, copy, and jiggle.
@@ -266,16 +210,10 @@ class Predator:
             self.copy_model_of_another_predator(parent)
         else:
             self.copy_model(Predator.default_pre_trained_model)
-#        self.jiggle_model()
         self.jiggle_model(0.5 * Predator.jiggle_strength)
         self.successes = []
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20221214 is self.step going to be a valid here?
         self.birthday = self.step
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         print('reinitializing predator', id(self))
-
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Utility based on https://stackoverflow.com/a/64542651/1991373
 # TODO 20220907 added this to avoid always getting the same random_weights
