@@ -74,25 +74,6 @@ def draw_crosshairs(center, image_size, disk_size):
 def draw_line(p1, p2, color="white"):
     plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color)
 
-#    # Draw a circle, dashed black and white, with given xy "center" and "diameter"
-#    # both specified in pixel units.
-#    def draw_circle(center, diameter):
-#        center = np.array(center)
-#        r = diameter / 2
-#        color = 'black'
-#        prev_angle = 0
-#        steps = 24
-#        for i in range(steps):
-#            next_angle = (i + 1) * 2 * math.pi / steps
-#            prev_point = np.array((math.sin(prev_angle), math.cos(prev_angle)))
-#            next_point = np.array((math.sin(next_angle), math.cos(next_angle)))
-#            draw_line(center + prev_point * r, center + next_point * r, color)
-#            if color == 'black':
-#                color = 'white'
-#            else:
-#                color = 'black'
-#            prev_angle = next_angle
-
 # Draw a circle, dashed black and white, with given xy "center" and "diameter"
 # both specified in pixel units.
 def draw_circle(center, diameter, draw_cross=True):
@@ -345,13 +326,6 @@ def reset_random_seeds(seed = random_seed):
     random.seed(seed)
     np.random.seed(seed)
     tf.random.set_seed(seed)
-
-#    # Distance between 2 points in 2d Euclidean space.
-#    # (TODO Should generalize to N dimensions)
-#    def dist2d(point1, point2):
-#        offset = point1 - point2
-#        # TODO there has GOT to be a cleaner "more pythonic" way to do this:
-#        return math.sqrt(math.pow(offset[0], 2) + math.pow(offset[1], 2))
     
 # Distance between 2 points in 2d Euclidean space.
 # (TODO Should generalize to N dimensions)
@@ -451,48 +425,6 @@ def spot_utility(position, center, inner_radius, outer_radius):
 # Visualize labels, or model predictions, of some examples from a given dataset.
 ################################################################################
 
-#    # Visualize labels, or model predictions, of a random sample of examples from a
-#    # given dataset. Must pass in a tensor of image tensors, one of EITHER a tensor
-#    # of labels (as xy of disk centers) OR a trained model for making predictions
-#    # from an image. Plus optionally a count of how many random examples to draw.
-#    # The labels (or predictions) are shown as overlaid crosshairs.
-#    def visualize_dataset(images, labels=None, model=None, count=10):
-#        for i in range(count):
-#            r = random.randrange(0, images.shape[0])
-#            pixel_tensor = images[r, :, :, :]
-#            center = (0, 0)
-#            if model is None:
-#                center = labels[r, :]
-#            if labels is None:
-#                center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
-#            print(r, ": (", center[0], ",", center[1], ")")
-#            draw_image(pixel_tensor, center)
-
-#    # Visualize labels, or model predictions, of a random sample of examples from a
-#    # given dataset. Must pass in a tensor of image tensors, one of EITHER a tensor
-#    # of labels (as xy of disk centers) OR a trained model for making predictions
-#    # from an image. Plus optionally a count of how many random examples to draw.
-#    # The labels (or predictions) are shown as overlaid crosshairs.
-#    def visualize_dataset(images, labels=None, model=None, count=10):
-#        for i in range(count):
-#            r = random.randrange(0, images.shape[0])
-#            pixel_tensor = images[r, :, :, :]
-#    #        center = (0, 0)
-#            label = None
-#            prediction = None
-#    #        if model is None:
-#    #            center = labels[r, :]
-#    #        if labels is None:
-#    #            center = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
-#            if labels is not None:
-#                label = labels[r, :]
-#            if model is not None:
-#                prediction = model.predict(tf.convert_to_tensor([pixel_tensor]))[0]
-#    #        print(r, ": (", center[0], ",", center[1], ")")
-#            print(r)
-#    #        draw_image(pixel_tensor, center)
-#            draw_image(pixel_tensor, label, prediction)
-
 # Visualize labels, and/or model predictions, of a random sample of examples
 # from a given dataset. Must pass in a tensor of image tensors, and optionally
 # a tensor of labels (as xy of disk centers), and/or a trained model for making
@@ -515,35 +447,6 @@ def visualize_dataset(images, labels=None, model=None, count=10):
 ################################################################################
 # Soft matte image compositing tool.
 ################################################################################
-
-## Matte (composite) one "foreground" RGB image over another "background" image,
-## according to per-pixel scalar alpha weights in "matte".
-#def soft_matte(foreground, background, matte):
-#
-#    # Multiply given (RGB) image by weights in given (single channel) matte.
-#    def weighted_element(image, matte):
-#        w = image.shape[0]
-#        h = image.shape[1]
-#        reshape_image = image.reshape(w * h, 3).T
-#        reshape_matte = matte.reshape(w * h, 1).T
-#        alpha_reshape = reshape_matte * reshape_image
-#        alpha = alpha_reshape.T.reshape([w, h, 3])
-#        return alpha
-#
-#    # Intended as more specific error messages for mismatch of args.
-#    def check_args(foreground, background, matte):
-#        assert foreground.shape[2] == 3, "'foreground' should be 3 floats deep"
-#        assert background.shape[2] == 3, "'background' should be 3 floats deep"
-#        assert matte.shape[2] == 1, "'matte' should be 1 float deep"
-#        a = foreground.shape[0:1] == matte.shape[0:1]
-#        assert a, "width or height of 'foreground' and 'matte' do not match"
-#        a = background.shape[0:1] == matte.shape[0:1]
-#        assert a, "width or height of 'background' and 'matte' do not match"
-#
-#    # Check args, then sum two image arguments, weighted by matte and inverse.
-#    check_args(foreground, background, matte)
-#    return (weighted_element(foreground, matte) +
-#            weighted_element(background, 1 - matte))
 
 # Matte (composite) one "foreground" RGB image over another "background" image,
 # according to per-pixel scalar alpha weights in "matte".
@@ -711,7 +614,6 @@ def flatten_nested_list(nested_list):
 def aim_error(prediction_xy, prey_centers_xy3):
     min_aim_error = math.inf
     for xy in prey_centers_xy3:
-#        distance = df.dist2d(xy, prediction_xy)
         distance = dist2d(xy, prediction_xy)
         if min_aim_error > distance:
             min_aim_error = distance

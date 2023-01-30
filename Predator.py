@@ -28,31 +28,14 @@ class Predator:
     # Cache the standard default_pre_trained_model (as a class variable).
     default_pre_trained_model = None
     
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20221001 try using half the jiggle in replace_in_population()
     # Class parameter: default strength of noise used to jiggle CNN models.
     jiggle_strength = 0.003
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     
-    # How much recent predation success data is kept,
-    # and how much of it must be non-zero to avoid starvation.
+    # How much recent predation success data is kept:
     success_history_max_length = 20
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20220922 lower starvation threshold, must miss more meals: .33 to .2
-#    success_history_min_meals = success_history_max_length * 0.33
-#    success_history_min_meals = success_history_max_length * 0.2
-#    success_history_ratio = 0.2
-    # TODO 20221030 -- have been seeing too many mediocre predators surviving
-    # for too long. Increase starvation threshold (more severe) from 0.2 to 0.35.
-#    success_history_ratio = 0.35
-    # TODO 20221210 experiment to make this even more severe 0.35 to 0.5
-#    success_history_ratio = 0.5
-    # TODO 20221214
-#    success_history_ratio = 0.42
-    # TODO 20221215
+    # And how much of it must be non-zero to avoid starvation.
     success_history_ratio = 0.4
     success_history_min_meals = success_history_max_length*success_history_ratio
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Keep track of how often selected prey is nearest center:
     nearest_center = 0
