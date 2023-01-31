@@ -18,7 +18,6 @@ import argparse
 import DiskFind as df
 import tensorflow as tf
 import PredatorServer as ps
-import FineTuningDataset as ftd
 from tensorflow import keras
 from Predator import Predator
 from Tournament import Tournament

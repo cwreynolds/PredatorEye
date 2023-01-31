@@ -16,7 +16,6 @@ import time
 import numpy as np
 import DiskFind as df
 import tensorflow as tf
-import FineTuningDataset as ftd
 
 from pathlib import Path
 from Predator import Predator
@@ -91,7 +90,18 @@ def write_response_file(step, directory):
     
     # Merge this step's image into fine-tuning dataset, and related bookkeeping.
     best_prediction = tournament.ranked_predictions()[0]
-    ftd.update(pixel_tensor, best_prediction, prey_centers_xy3, step, directory)
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20230130 make FineTuningDataset into a class
+#    ftd.update(pixel_tensor, best_prediction, prey_centers_xy3, step, directory)
+#    Predator.ftd.update(pixel_tensor, best_prediction,
+#                        prey_centers_xy3, step, directory)
+#    # Update the fine-tuning dataset of each Predator in the current tournament.
+#    for p in tournament.members:
+#        p.ftd.update(pixel_tensor, best_prediction, prey_centers_xy3)
+    # Update the fine-tuning dataset of each Predator in the current tournament.
+    for m in tournament.members:
+        m.predator.ftd.update(pixel_tensor, best_prediction, prey_centers_xy3)
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Update the Predator population in case of starvation.
     Predator.step = step  # TODO 20220911 Goofy hack.

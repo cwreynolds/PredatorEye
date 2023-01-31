@@ -16,7 +16,7 @@ import random
 import numpy as np
 import DiskFind as df
 import tensorflow as tf
-import FineTuningDataset as ftd
+from FineTuningDataset import FineTuningDataset
 
 class Predator:
     """Represents a Predator in the camouflage simulation. It has a CNN-based
@@ -60,6 +60,10 @@ class Predator:
         self.name = 'predator_' + str(Predator.instance_counter)
         Predator.instance_counter += 1
         self.previous_in_disk = 0
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20230130 make FineTuningDataset into a class, one per Predator
+        self.ftd = FineTuningDataset()
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # number of steps since this Predator was created
     def age(self):
@@ -75,11 +79,19 @@ class Predator:
         # (TODO 20230107 I think these are identical for all three Predators in
         #    a Tournament. Could be precomputed in Tournament.fine_tune_models()
         #    and passed in here.)
-        images_array = np.array(ftd.fine_tune_images)
-        labels_array = np.array([x[0] for x in ftd.fine_tune_labels])
+#        images_array = np.array(ftd.fine_tune_images)
+#        labels_array = np.array([x[0] for x in ftd.fine_tune_labels])
+        images_array = np.array(self.ftd.fine_tune_images)
+        labels_array = np.array([x[0] for x in self.ftd.fine_tune_labels])
 
-        # Skip fine-tuning until dataset is large enough (10% of max size).
-        if images_array.shape[0] > (ftd.max_training_set_size * 0.1):
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20230130 make FineTuningDataset into a class, one per Predator
+#        # Skip fine-tuning until dataset is large enough (10% of max size).
+##        if images_array.shape[0] > (ftd.max_training_set_size * 0.1):
+#        if images_array.shape[0] > (self.ftd.max_dataset_size * 0.1):
+        # Skip fine-tuning until dataset is large enough (25 = 5% of max size).
+        if images_array.shape[0] > (self.ftd.max_dataset_size * 0.05):
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
             # TODO 20220823 -- run fine-tuning on CPU only.
 #            print('Running on CPU ONLY!')
             with tf.device('/cpu:0'):
@@ -197,6 +209,10 @@ class Predator:
         self.jiggle_model(0.5 * Predator.jiggle_strength)
         self.successes = []
         self.birthday = self.step
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20230130 make FineTuningDataset into a class, one per Predator
+        self.ftd = FineTuningDataset()
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         print('reinitializing predator', id(self))
 
 # Utility based on https://stackoverflow.com/a/64542651/1991373
