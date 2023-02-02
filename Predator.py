@@ -47,6 +47,12 @@ class Predator:
     
     # Only used for generating unique name.
     instance_counter = 0
+    
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20230130 make FineTuningDataset into a class, one per Predator
+    #               change this to be a absolute number of training examples
+    min_ftd_size = 25
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Instance constructor.
     def __init__(self):
@@ -89,8 +95,11 @@ class Predator:
 #        # Skip fine-tuning until dataset is large enough (10% of max size).
 ##        if images_array.shape[0] > (ftd.max_training_set_size * 0.1):
 #        if images_array.shape[0] > (self.ftd.max_dataset_size * 0.1):
-        # Skip fine-tuning until dataset is large enough (25 = 5% of max size).
-        if images_array.shape[0] > (self.ftd.max_dataset_size * 0.05):
+#        # Skip fine-tuning until dataset is large enough (25 = 5% of max size).
+#        if images_array.shape[0] > (self.ftd.max_dataset_size * 0.05):
+
+        # Skip fine-tuning until dataset is large enough.
+        if images_array.shape[0] > self.min_ftd_size:
         # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
             # TODO 20220823 -- run fine-tuning on CPU only.
 #            print('Running on CPU ONLY!')

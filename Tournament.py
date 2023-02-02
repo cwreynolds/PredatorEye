@@ -99,6 +99,15 @@ class Tournament:
             for p in sorted_pop:
                 print("%.2f" % p.previous_in_disk, end = " ")
             print()
+            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+            # TODO 20230201 at starvation time log predator's ftd size
+            # Print each predator's FTD size.
+            print('FTD size (in age order):')
+            print('', end = "    ")
+            for p in sorted_pop:
+                print(p.ftd.size(), end = " ")
+            print()
+            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
             print()
 
             # Replace worst predator in Tournament with offspring of other two.
