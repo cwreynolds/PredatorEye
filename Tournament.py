@@ -67,52 +67,51 @@ class Tournament:
     def update_predator_population(self):
         worst_predator = self.members[-1].predator
         if worst_predator.starvation():
-            global xxx_temp_starvation_count
-            xxx_temp_starvation_count += 1
-            print()
-            print('starving!! ', xxx_temp_starvation_count, ', ',
-                  worst_predator.step / xxx_temp_starvation_count, ', ',
-                  "%.3f" % (xxx_temp_starvation_count / worst_predator.step),
-                  sep='')
-            # Name for lambda used twice below.
-            predator_age = lambda predator: predator.age()
-            # Make copy of predator population, sorted by age.
-            sorted_pop = sorted(Predator.population, key=predator_age)
-            # Collect ages of population.
-            ages = list(map(predator_age, sorted_pop))
-            # Print ages
-            print('age (min mean max):', ages[0], statistics.mean(ages), ages[-1])
-            print('ages:', end = " ")
-            for a in ages:
-                print(a, end = " ")
-            print()
-            # Print hunt success as percent.
-            print('Hunt success (in age order):')
-            print('', end = "    ")
-            for p in sorted_pop:
-                s = int(100 * sum(p.successes) / p.success_history_max_length)
-                print(s, end = "% ")
-            print()
-            # Print in_disk from each predator's most recent fine-tuning.
-            print('in_disk at last fine-tune (in age order):')
-            print('', end = "    ")
-            for p in sorted_pop:
-                print("%.2f" % p.previous_in_disk, end = " ")
-            print()
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-            # TODO 20230201 at starvation time log predator's ftd size
-            # Print each predator's FTD size.
-            print('FTD size (in age order):')
-            print('', end = "    ")
-            for p in sorted_pop:
-                print(p.ftd.size(), end = " ")
-            print()
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-            print()
-
+            Tournament.xxx_temp_starvation_count += 1
+            self.update_predator_population_logging(worst_predator)
             # Replace worst predator in Tournament with offspring of other two.
             worst_predator.replace_in_population(self.members[0].predator,
                                                  self.members[1].predator)
 
-# TODO 20220913 temp ad hoc counter
-xxx_temp_starvation_count = 0
+    # TODO 20220913 temp ad hoc counter (per class)
+    xxx_temp_starvation_count = 0
+
+    # Log stats about Predator population when one dies.
+    def update_predator_population_logging(self, worst_predator):
+        print()
+        print('starving!! ', Tournament.xxx_temp_starvation_count, ', ',
+              worst_predator.step / Tournament.xxx_temp_starvation_count, ', ',
+              "%.3f" % (Tournament.xxx_temp_starvation_count / worst_predator.step),
+              sep='')
+        # Name for lambda used twice below.
+        predator_age = lambda predator: predator.age()
+        # Make copy of predator population, sorted by age.
+        sorted_pop = sorted(Predator.population, key=predator_age)
+        # Collect ages of population.
+        ages = list(map(predator_age, sorted_pop))
+        # Print ages
+        print('age (min mean max):', ages[0], statistics.mean(ages), ages[-1])
+        print('ages:', end = " ")
+        for a in ages:
+            print(a, end = " ")
+        print()
+        # Print hunt success as percent.
+        print('Hunt success (in age order):')
+        print('', end = "    ")
+        for p in sorted_pop:
+            s = int(100 * sum(p.successes) / p.success_history_max_length)
+            print(s, end = "% ")
+        print()
+        # Print in_disk from each predator's most recent fine-tuning.
+        print('in_disk at last fine-tune (in age order):')
+        print('', end = "    ")
+        for p in sorted_pop:
+            print("%.2f" % p.previous_in_disk, end = " ")
+        print()
+        # Print each predator's FTD size.
+        print('FTD size (in age order):')
+        print('', end = "    ")
+        for p in sorted_pop:
+            print(p.ftd.size(), end = " ")
+        print()
+        print()

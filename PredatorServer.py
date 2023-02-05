@@ -164,7 +164,13 @@ def wait_for_reply(step, directory):
     test_count = 0
     while not (is_file_present(camo_pathname) and
                is_file_present(prey_pathname)):
-        time.sleep(1)
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20230204 1 sec was OK when communicating with a cloud server and
+        #     round trip times were 40 seconds. Now in the per-predator-FTD era,
+        #     step times are 1-2 seconds and this needs to be faster.
+#        time.sleep(1)
+        time.sleep(0.1)
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         test_count += 1
         if (test_count % 100) == 0:
             write_ping_file(test_count, step, directory)

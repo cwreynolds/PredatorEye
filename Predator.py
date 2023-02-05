@@ -85,24 +85,13 @@ class Predator:
         # (TODO 20230107 I think these are identical for all three Predators in
         #    a Tournament. Could be precomputed in Tournament.fine_tune_models()
         #    and passed in here.)
-#        images_array = np.array(ftd.fine_tune_images)
-#        labels_array = np.array([x[0] for x in ftd.fine_tune_labels])
         images_array = np.array(self.ftd.fine_tune_images)
         labels_array = np.array([x[0] for x in self.ftd.fine_tune_labels])
 
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20230130 make FineTuningDataset into a class, one per Predator
-#        # Skip fine-tuning until dataset is large enough (10% of max size).
-##        if images_array.shape[0] > (ftd.max_training_set_size * 0.1):
-#        if images_array.shape[0] > (self.ftd.max_dataset_size * 0.1):
-#        # Skip fine-tuning until dataset is large enough (25 = 5% of max size).
-#        if images_array.shape[0] > (self.ftd.max_dataset_size * 0.05):
-
         # Skip fine-tuning until dataset is large enough.
         if images_array.shape[0] > self.min_ftd_size:
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
             # TODO 20220823 -- run fine-tuning on CPU only.
-#            print('Running on CPU ONLY!')
+            # print('Running on CPU ONLY!')
             with tf.device('/cpu:0'):
                 # Do fine-tuning training step using data accumulated during run.
                 history = self.model.fit(x=images_array, y=labels_array, verbose=0)
@@ -218,11 +207,8 @@ class Predator:
         self.jiggle_model(0.5 * Predator.jiggle_strength)
         self.successes = []
         self.birthday = self.step
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20230130 make FineTuningDataset into a class, one per Predator
         self.ftd = FineTuningDataset()
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        print('reinitializing predator', id(self))
+        print('reinitialized', self.name)
 
 # Utility based on https://stackoverflow.com/a/64542651/1991373
 # TODO 20220907 added this to avoid always getting the same random_weights
