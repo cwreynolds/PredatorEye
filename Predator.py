@@ -48,11 +48,8 @@ class Predator:
     # Only used for generating unique name.
     instance_counter = 0
     
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20230130 make FineTuningDataset into a class, one per Predator
-    #               change this to be a absolute number of training examples
+    # Number of training examples required before fine-tuning begins.
     min_ftd_size = 25
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Instance constructor.
     def __init__(self):
@@ -66,10 +63,7 @@ class Predator:
         self.name = 'predator_' + str(Predator.instance_counter)
         Predator.instance_counter += 1
         self.previous_in_disk = 0
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20230130 make FineTuningDataset into a class, one per Predator
         self.ftd = FineTuningDataset()
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # number of steps since this Predator was created
     def age(self):
