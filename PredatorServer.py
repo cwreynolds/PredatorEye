@@ -110,13 +110,9 @@ def write_response_file(step, directory):
     # Fine-tune models of each Predator in Tournament.
     tournament.fine_tune_models()
     
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# TODO 20230309 process any SQM files
-
-# Before waiting for the next "camo_" file, this checks for and processes all
-# "eval_" files for Static Quality Metric. If it finds any, it holds control
-# until they are all handled.
-
+# Process any SQM files. Before waiting for the next "camo_" file, this checks
+# for and processes all "eval_" files for Static Quality Metric. If it finds
+# any, it holds control until they are all handled.
 def process_any_sqm_files(step, directory):
     directory_path = Path(directory)
     sqm_index = -1
@@ -134,22 +130,8 @@ def process_any_sqm_files(step, directory):
         if p.exists():
             p.unlink()
 
-#    # Write response file (contains an xy position as 2 floats on [0,1]).
-#    def write_sqm_response():
-#        response_string = '0.5 0.5'
-#        verify_comms_directory_reachable()
-#        wait_pathname = Path(make_sqm_pathname('wait_', sqm_index))
-#        done_pathname = Path(make_sqm_pathname('sqm_', sqm_index))
-#        with open(wait_pathname, 'w') as file:
-#            file.write(response_string)
-#        wait_pathname.rename(done_pathname)
-#        print('Wrote ' + "'" + response_string + "'",
-#              'to response file', done_pathname.name)
-#        delete_previous_sqm_file(sqm_index, step, directory)
-
     # Write response file (contains an xy position as 2 floats on [0,1]).
     def write_sqm_response(xy_prediction):
-#        response_string = '0.5 0.5'
         response_string = str(xy_prediction[0]) + ' ' + str(xy_prediction[1])
         verify_comms_directory_reachable()
         wait_pathname = Path(make_sqm_pathname('wait_', sqm_index))
@@ -157,8 +139,8 @@ def process_any_sqm_files(step, directory):
         with open(wait_pathname, 'w') as file:
             file.write(response_string)
         wait_pathname.rename(done_pathname)
-        print('Wrote ' + "'" + response_string + "'",
-              'to response file', done_pathname.name)
+#        print('Wrote ' + "'" + response_string + "'",
+#              'to response file', done_pathname.name)
         delete_previous_sqm_file(sqm_index, step, directory)
 
     def get_start_index():
@@ -175,48 +157,27 @@ def process_any_sqm_files(step, directory):
         pixel_tensor = df.read_image_file_as_pixel_tensor(image_pathname)
         tf_pixel_tensor = tf.convert_to_tensor([pixel_tensor])
         prediction = model.predict(tf_pixel_tensor, verbose=0)[0]
-#        print("prediction =", prediction)
-#        return [0, 0]
         return prediction
-
 
     # Main loop to process any SQM requests until there are none.
     done = False
     while not done:
         done = True
-
         if sqm_index < 0:
             i = get_start_index()
             if type(i) == int:
                 sqm_index = i
-                print('sqm_index =', sqm_index)
-
-        if sqm_index >= 0:
-            print('waiting for', Path(make_eval_pathname(sqm_index)).name)
-            
+#                print('sqm_index =', sqm_index)
+#        if sqm_index >= 0:
+#            print('waiting for', Path(make_eval_pathname(sqm_index)).name)
         image_pathname = make_eval_pathname(sqm_index)
-#        if is_file_present(make_eval_pathname(sqm_index)):
         if is_file_present(image_pathname):
             done = False
-#            print('Found', Path(make_eval_pathname(sqm_index)).name)
-            print('Found', Path(image_pathname).name)
-            
+#            print('Found', Path(image_pathname).name)
             xy_prediction = xy_prediction_from_image(image_pathname)
-            print("xy_prediction =", xy_prediction)
-
+#            print("xy_prediction =", xy_prediction)
             write_sqm_response(xy_prediction)
             sqm_index += 1
-            
-#        delete_previous_sqm_file(sqm_index, step, directory)
-
-#        print("Predator.default_pre_trained_model =",
-#              Predator.default_pre_trained_model)
-
-
-        
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 
 # Delete the given file, presumably after having written the next one.
 def delete_find_file(step, directory):
@@ -272,12 +233,8 @@ def wait_for_reply(step, directory):
     test_count = 0
     while not (is_file_present(camo_pathname) and
                is_file_present(prey_pathname)):
-        
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20230309 process any SQM files
+        # Process any pending SQM evaluation requests ("eval-..." files).
         process_any_sqm_files(step, directory)
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
         # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         # TODO 20230204 1 sec was OK when communicating with a cloud server and
         #     round trip times were 40 seconds. Now in the per-predator-FTD era,
